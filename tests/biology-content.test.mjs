@@ -5,33 +5,37 @@ import {
   biomoleculeQuestions,
   cellCycleQuestions,
   enzymeQuestions,
+  eukaryoteQuestions,
   geneExpressionQuestions,
+  inheritanceQuestions,
   mutationQuestions,
   pdfPipeline,
   photosynthesisQuestions,
   practicalSkills,
+  prokaryoteQuestions,
   respirationQuestions,
   syllabusAreas,
   techniqueQuestions,
   transportQuestions,
+  virusQuestions,
   verifiedBiologyQuestions,
 } from "../lib/biology-content.ts";
 
 test("complete 9477 map and 17-PDF pipeline use verified source counts", () => {
   assert.equal(syllabusAreas.reduce((sum, area) => sum + area.outcomes, 0), 101);
   assert.equal(syllabusAreas.reduce((sum, area) => sum + area.sourced, 0), 96);
-  assert.equal(syllabusAreas.reduce((sum, area) => sum + area.verified, 0), 33);
+  assert.equal(syllabusAreas.reduce((sum, area) => sum + area.verified, 0), 53);
   assert.equal(practicalSkills.length, 4);
   assert.equal(pdfPipeline.length, 17);
   assert.equal(pdfPipeline.reduce((sum, file) => sum + file.pages, 0), 852);
   assert.equal(pdfPipeline.reduce((sum, file) => sum + file.images, 0), 1866);
-  assert.equal(pdfPipeline.filter((file) => file.status === "Verified").length, 9);
+  assert.equal(pdfPipeline.filter((file) => file.status === "Verified").length, 13);
 });
 
 test("Core 1 packs are mature and continuous", () => {
   assert.deepEqual([biomoleculeQuestions.length, enzymeQuestions.length, transportQuestions.length], [30, 30, 30]);
-  assert.equal(verifiedBiologyQuestions.length, 270);
-  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 270);
+  assert.equal(verifiedBiologyQuestions.length, 390);
+  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 390);
 
   for (const code of ["1(g)", "1(h)", "1(i)", "1(j)", "1(k)", "1(l)", "1(p)", "1(q)", "1(r)", "1(s)"]) {
     assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 3, code);
@@ -49,6 +53,27 @@ test("Core 1 packs are mature and continuous", () => {
         assert.ok(question.answer >= 0 && question.answer < question.options.length, question.id);
       }
     }
+  }
+});
+
+test("four new Biology packs are mature, varied and source-linked", () => {
+  const packs = [eukaryoteQuestions, virusQuestions, prokaryoteQuestions, inheritanceQuestions];
+  assert.deepEqual(packs.map((pack) => pack.length), [30, 30, 30, 30]);
+  for (const pack of packs) {
+    assert.deepEqual(new Set(pack.map((question) => question.format ?? "mcq")), new Set(["mcq", "image", "sequence", "data", "structured", "practical"]));
+    for (const question of pack) {
+      assert.ok(existsSync(`public${question.sourceImage}`), question.sourceImage);
+      assert.match(question.source, /PDF p\./);
+      if (question.markPoints) {
+        assert.equal(question.markPoints.length, question.marks, question.id);
+        assert.ok(question.modelAnswer, question.id);
+      } else {
+        assert.ok(question.answer >= 0 && question.answer < question.options.length, question.id);
+      }
+    }
+  }
+  for (const code of ["1(e)", "1(f)", "1(t)", "1(u)", "2(d)", "2(e)", "2(f)", "2(g)", "2(h)", "2(i)", "2(u)", "2(v)", "2(w)", "2(x)", "2(y)", "2(z)", "2(aa)", "2(bb)", "2(cc)", "2(dd)"]) {
+    assert.ok(verifiedBiologyQuestions.some((question) => question.code === code), code);
   }
 });
 

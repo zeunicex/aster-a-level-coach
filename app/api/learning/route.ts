@@ -1,11 +1,14 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { visitorIdentity, visitorJson } from "@/app/visitor";
 import { getStore } from "@/db/runtime";
 import { seedContentPacks } from "@/db/packs";
 import { packOrderForSource, verifiedBiologyAnswerKey } from "@/lib/biology-content";
-import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, nextReviewDate, normalizeReviewDate } from "@/lib/adaptive.mjs";
+import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, nextReviewDate, normalizeReviewDate, reliableMastery } from "@/lib/adaptive.mjs";
+import { gradeStructuredAnswer } from "@/lib/marking.mjs";
 
 const seedMastery = {
   Biology: [
+    ["1(e)", "Viral structures", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(f)", "Viruses, life and cell theory", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["1(g)", "Biomolecule monomers", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["1(h)", "Biological bonds", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["1(i)", "Structure and function", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
@@ -16,8 +19,16 @@ const seedMastery = {
     ["1(q)", "Enzyme investigations", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["1(r)", "Inhibitor binding", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["1(s)", "Inhibitor effects", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(t)", "Stem-cell potency", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(u)", "Stem-cell functions", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["2(a)", "DNA replication", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["2(b)", "Gene expression", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(d)", "Genome organisation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(e)", "Viral reproductive cycles", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(f)", "Viral genome variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(g)", "Prokaryotic genetic variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(h)", "Eukaryotic non-coding DNA", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(i)", "Eukaryotic gene regulation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["2(k)", "Molecular DNA techniques", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["2(l)", "Mutation and chromosome aberration", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["2(m)", "Mutation and genetic disease", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
@@ -28,6 +39,16 @@ const seedMastery = {
     ["2(r)", "Multi-step cancer development", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["2(s)", "Meiotic cell cycle", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["2(t)", "Meiosis and variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(u)", "Genetic terminology", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(v)", "Inheritance through gametes", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(w)", "Genotype and phenotype", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(x)", "Genetic diagrams", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(y)", "Test crosses", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(z)", "Linkage and crossing over", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(aa)", "Epistasis", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(bb)", "Environmental effects on phenotype", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(cc)", "Continuous and discontinuous variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["2(dd)", "Chi-squared tests", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["3(a)", "Energy organelles", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["3(b)", "Photosynthetic spectra", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["3(c)", "Light-dependent reactions", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
@@ -48,12 +69,9 @@ const seedMastery = {
   ],
 } as const;
 
-async function currentUserId() {
-  return (await getChatGPTUser())?.userId ?? "local-preview";
-}
-
 export async function GET(request: Request) {
-  const userId = await currentUserId();
+  const identity = await visitorIdentity(request);
+  const userId = identity.userId;
   const subject = new URL(request.url).searchParams.get("subject") === "Chemistry" ? "Chemistry" : "Biology";
   const db = await getStore();
   const now = new Date().toISOString();
@@ -71,8 +89,26 @@ export async function GET(request: Request) {
   `).bind(userId, subject).all();
   const activeCodes = new Set<string>(seedMastery[subject].map((item) => String(item[0])));
   const storedMastery = (mastery.results as { code: string; due: string }[]).filter((item) => activeCodes.has(item.code));
-  const activeMastery = storedMastery.map((item) => ({ ...item, due: normalizeReviewDate(item.due, today) }));
-  const legacyDates = activeMastery.filter((item, index) => item.due !== storedMastery[index].due);
+  const normalizedMastery = storedMastery.map((item) => ({ ...item, due: normalizeReviewDate(item.due, today) }));
+  const attemptRows = await db.prepare(`SELECT question_id, objective_code, correct, confidence, used_hint
+    FROM attempts WHERE user_id = ? AND subject = ? ORDER BY created_at DESC LIMIT 300`)
+    .bind(userId, subject).all<{ question_id: string; objective_code: string; correct: number; confidence: string; used_hint: number }>();
+  const attemptsByCode = new Map<string, { correct: boolean; confidence: string; usedHint: boolean; format: string }[]>();
+  for (const attempt of attemptRows.results) {
+    const items = attemptsByCode.get(attempt.objective_code) ?? [];
+    if (items.length < 6) items.push({
+      correct: Boolean(attempt.correct),
+      confidence: attempt.confidence,
+      usedHint: Boolean(attempt.used_hint),
+      format: verifiedBiologyAnswerKey[attempt.question_id]?.format ?? "mcq",
+    });
+    attemptsByCode.set(attempt.objective_code, items);
+  }
+  const activeMastery = normalizedMastery.map((item) => ({
+    ...item,
+    mastered: reliableMastery(item, attemptsByCode.get(item.code) ?? [], today),
+  }));
+  const legacyDates = normalizedMastery.filter((item, index) => item.due !== storedMastery[index].due);
   if (legacyDates.length) await db.batch(legacyDates.map((item) => db.prepare("UPDATE mastery SET due = ? WHERE user_id = ? AND subject = ? AND code = ?").bind(item.due, userId, subject, item.code)));
   const totals = await db.prepare("SELECT COUNT(*) AS count FROM attempts WHERE user_id = ? AND subject = ?")
     .bind(userId, subject).first<{ count: number }>();
@@ -91,28 +127,29 @@ export async function GET(request: Request) {
     }
   }
 
-  return Response.json({ mastery: activeMastery, attempts: totals?.count ?? 0, todayStats: todayStats ?? { answered: 0, secure: 0 }, missedPoints: [...gaps.values()].sort((a, b) => b.count - a.count).slice(0, 6), saved: true });
+  return visitorJson({ mastery: activeMastery, attempts: totals?.count ?? 0, todayStats: todayStats ?? { answered: 0, secure: 0 }, missedPoints: [...gaps.values()].sort((a, b) => b.count - a.count).slice(0, 6), saved: true }, identity);
 }
 
 export async function POST(request: Request) {
   const payload = await request.json() as {
     questionId?: string;
     selected?: number;
-    awardedPointIndexes?: number[];
+    writtenAnswer?: string;
     confidence?: "Low" | "Medium" | "High";
     usedHint?: boolean;
   };
   const question = payload.questionId ? verifiedBiologyAnswerKey[payload.questionId] : null;
   const written = Boolean(question?.markPoints?.length);
-  const pointIndexes = payload.awardedPointIndexes ?? [];
+  const pointIndexes = written ? gradeStructuredAnswer(question!.markPoints!, payload.writtenAnswer ?? "").awardedPointIndexes : [];
   const validAnswer = written
-    ? Array.isArray(pointIndexes) && new Set(pointIndexes).size === pointIndexes.length && pointIndexes.every((index) => Number.isInteger(index) && index >= 0 && index < Number(question?.markPoints?.length))
+    ? Boolean(payload.writtenAnswer?.trim())
     : Number.isInteger(payload.selected);
   if (!question || !validAnswer || !["Low", "Medium", "High"].includes(payload.confidence ?? "")) {
     return Response.json({ error: "Invalid verified question attempt" }, { status: 400 });
   }
 
-  const userId = await currentUserId();
+  const identity = await visitorIdentity(request);
+  const userId = identity.userId;
   const db = await getStore();
   await seedContentPacks(db);
   const packOrder = packOrderForSource(question.source);
@@ -155,5 +192,15 @@ export async function POST(request: Request) {
       .bind(updated.score, updated.evidence, updated.confidence, updated.knowledge, updated.application, updated.exam, updated.note, updated.due, now, userId, question.code),
   ]);
 
-  return Response.json({ correct, delta, missedPoints, mastery: { code: question.code, ...updated } });
+  const recentRows = await db.prepare(`SELECT question_id, correct, confidence, used_hint FROM attempts
+    WHERE user_id = ? AND subject = 'Biology' AND objective_code = ? ORDER BY created_at DESC LIMIT 6`)
+    .bind(userId, question.code).all<{ question_id: string; correct: number; confidence: string; used_hint: number }>();
+  const mastered = reliableMastery(updated, recentRows.results.map((attempt) => ({
+    correct: Boolean(attempt.correct),
+    confidence: attempt.confidence,
+    usedHint: Boolean(attempt.used_hint),
+    format: verifiedBiologyAnswerKey[attempt.question_id]?.format ?? "mcq",
+  })), dateKey(new Date(now)));
+
+  return visitorJson({ correct, delta, missedPoints, awardedPointIndexes: pointIndexes, mastery: { code: question.code, ...updated, mastered, note: mastered ? "Mastered · resting until review" : updated.note } }, identity);
 }

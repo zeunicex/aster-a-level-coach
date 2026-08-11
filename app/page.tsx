@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, objectiveNeedsPractice, pickNextQuestion, reviewLabel } from "@/lib/adaptive.mjs";
 import { packOrderForSource, pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions, type PackStatus } from "@/lib/biology-content";
+import { gradeStructuredAnswer } from "@/lib/marking.mjs";
 
 type Subject = "Biology" | "Chemistry";
 type View = "today" | "map" | "pipeline" | "library" | "progress";
@@ -21,6 +22,7 @@ type MasteryItem = {
   knowledge: number;
   application: number;
   exam: number;
+  mastered?: boolean;
 };
 type Question = {
   id: string;
@@ -69,6 +71,8 @@ const initialPackStates: PackState[] = pdfPipeline.map((pack) => ({
 
 const initialMastery: Record<Subject, MasteryItem[]> = {
   Biology: [
+    { code: "1(e)", topic: "Viral structures", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(f)", topic: "Viruses, life and cell theory", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(g)", topic: "Biomolecule monomers", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(h)", topic: "Biological bonds", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(i)", topic: "Structure and function", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
@@ -79,8 +83,16 @@ const initialMastery: Record<Subject, MasteryItem[]> = {
     { code: "1(q)", topic: "Enzyme investigations", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(r)", topic: "Inhibitor binding", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(s)", topic: "Inhibitor effects", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(t)", topic: "Stem-cell potency", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(u)", topic: "Stem-cell functions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "2(a)", topic: "DNA replication", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "2(b)", topic: "Gene expression", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(d)", topic: "Genome organisation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(e)", topic: "Viral reproductive cycles", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(f)", topic: "Viral genome variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(g)", topic: "Prokaryotic genetic variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(h)", topic: "Eukaryotic non-coding DNA", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(i)", topic: "Eukaryotic gene regulation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "2(k)", topic: "Molecular DNA techniques", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "2(l)", topic: "Mutation and chromosome aberration", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "2(m)", topic: "Mutation and genetic disease", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
@@ -91,6 +103,16 @@ const initialMastery: Record<Subject, MasteryItem[]> = {
     { code: "2(r)", topic: "Multi-step cancer development", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "2(s)", topic: "Meiotic cell cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "2(t)", topic: "Meiosis and variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(u)", topic: "Genetic terminology", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(v)", topic: "Inheritance through gametes", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(w)", topic: "Genotype and phenotype", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(x)", topic: "Genetic diagrams", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(y)", topic: "Test crosses", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(z)", topic: "Linkage and crossing over", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(aa)", topic: "Epistasis", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(bb)", topic: "Environmental effects on phenotype", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(cc)", topic: "Continuous and discontinuous variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(dd)", topic: "Chi-squared tests", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "3(a)", topic: "Energy organelles", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "3(b)", topic: "Photosynthetic spectra", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "3(c)", topic: "Light-dependent reactions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
@@ -488,6 +510,10 @@ export default function Home() {
     { name: "8. DNA Replication & Gene Expression.pdf", meta: "52 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "9. DNA Mutations & Its Consequences.pdf", meta: "39 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "10. Molecular Techniques in DNA Analysis.pdf", meta: "27 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "11. OCGE in Eukaryotes & Stem Cell.pdf", meta: "96 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "12. Viruses.pdf", meta: "42 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "13. OCGE in Prokaryotes (Bacteria).pdf", meta: "44 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "14. Inheritance.pdf", meta: "75 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -531,11 +557,15 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      fetch(`/api/learning?subject=${subject}`).then((response) => response.ok ? response.json() : Promise.reject()),
-      fetch("/api/materials").then((response) => response.ok ? response.json() : Promise.reject()),
-      fetch("/api/packs").then((response) => response.ok ? response.json() : Promise.reject()),
-    ]).then(([learning, materials, packs]) => {
+    fetch(`/api/learning?subject=${subject}`)
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then(async (learning) => {
+        const [materials, packs] = await Promise.all([
+          fetch("/api/materials").then((response) => response.ok ? response.json() : Promise.reject()),
+          fetch("/api/packs").then((response) => response.ok ? response.json() : Promise.reject()),
+        ]);
+        return [learning, materials, packs];
+      }).then(([learning, materials, packs]) => {
       if (!active) return;
       setMasteryState((current) => ({ ...current, [subject]: learning.mastery as MasteryItem[] }));
       setTodayStats(learning.todayStats ?? { answered: 0, secure: 0 });
@@ -553,6 +583,10 @@ export default function Home() {
         { name: "8. DNA Replication & Gene Expression.pdf", meta: "52 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "9. DNA Mutations & Its Consequences.pdf", meta: "39 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "10. Molecular Techniques in DNA Analysis.pdf", meta: "27 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "11. OCGE in Eukaryotes & Stem Cell.pdf", meta: "96 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "12. Viruses.pdf", meta: "42 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "13. OCGE in Prokaryotes (Bacteria).pdf", meta: "44 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "14. Inheritance.pdf", meta: "75 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
       ] : [
         { name: "H2 Chemistry course materials", meta: "Awaiting source pack", tag: "Source pack", status: "Needed" },
@@ -601,9 +635,10 @@ export default function Home() {
     setComplete(false);
   }
 
-  async function recordAnswer(selectedAnswer?: number, awardedPointIndexes: number[] = []) {
+  async function recordAnswer(selectedAnswer?: number, responseText = "") {
     if (answerConfidence === null) return;
     setSaving(true);
+    let awardedPointIndexes = isWritten ? gradeStructuredAnswer(activeQuestion.markPoints!, responseText).awardedPointIndexes : [];
     const awardedMarks = awardedPointIndexes.length;
     let missedPoints = isWritten ? activeQuestion.markPoints!.filter((_, index) => !awardedPointIndexes.includes(index)) : [];
     let correct = isWritten
@@ -618,12 +653,13 @@ export default function Home() {
         const response = await fetch("/api/learning", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ questionId: activeQuestion.id, selected: selectedAnswer, awardedPointIndexes, confidence: answerConfidence, usedHint }),
+          body: JSON.stringify({ questionId: activeQuestion.id, selected: selectedAnswer, writtenAnswer: isWritten ? responseText : undefined, confidence: answerConfidence, usedHint }),
         });
         if (!response.ok) throw new Error("Save failed");
         const result = await response.json();
         correct = result.correct;
         delta = result.delta;
+        awardedPointIndexes = result.awardedPointIndexes ?? awardedPointIndexes;
         missedPoints = result.missedPoints ?? missedPoints;
         serverMastery = result.mastery;
         setCloudStatus("Saved just now");
@@ -631,6 +667,7 @@ export default function Home() {
         setCloudStatus("Answer shown · cloud save will need a retry");
       }
     }
+    setAwardedPoints(awardedPointIndexes);
     setMasteryState((current) => ({
       ...current,
       [subject]: current[subject].map((item) => {
@@ -680,15 +717,11 @@ export default function Home() {
     if (answerConfidence === null) return;
     if (isWritten) {
       if (!writtenAnswer.trim()) return;
-      setChecked(true);
+      await recordAnswer(undefined, writtenAnswer);
       return;
     }
     if (selected === null) return;
     await recordAnswer(selected);
-  }
-
-  async function saveSelfMark() {
-    await recordAnswer(undefined, awardedPoints);
   }
 
   function nextQuestion() {
@@ -852,10 +885,9 @@ export default function Home() {
                   {isWritten ? (
                     !checked ? <label className="written-response"><span>Your answer</span><textarea value={writtenAnswer} onChange={(event) => setWrittenAnswer(event.target.value)} placeholder={`Write an exam-style response worth ${activeQuestion.marks} marks…`} /></label> : (
                       <div className="mark-review">
-                        <div><strong>Mark your response</strong><span>Select only the points your answer clearly included.</span></div>
-                        {activeQuestion.markPoints?.map((point, index) => <button key={point} disabled={marked} aria-pressed={awardedPoints.includes(index)} onClick={() => setAwardedPoints((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index])}><i>{awardedPoints.includes(index) ? "✓" : index + 1}</i><span>{point}</span></button>)}
+                        <div><strong>Automatic mark-point score · {awardedPoints.length}/{activeQuestion.marks}</strong><span>Aster matched your written response against the verified mark scheme.</span></div>
+                        {activeQuestion.markPoints?.map((point, index) => <button key={point} disabled aria-pressed={awardedPoints.includes(index)}><i>{awardedPoints.includes(index) ? "✓" : "×"}</i><span>{point}</span></button>)}
                         {activeQuestion.modelAnswer && <details><summary>Show model answer</summary><p>{activeQuestion.modelAnswer}</p></details>}
-                        {!marked && <button className="primary-button save-mark" disabled={saving} onClick={saveSelfMark}>{saving ? "Saving evidence…" : `Save ${awardedPoints.length} / ${activeQuestion.marks} marks`}</button>}
                       </div>
                     )
                   ) : (
@@ -882,7 +914,7 @@ export default function Home() {
                         <span>Before checking, how confident are you?</span>
                         <div>{(["Low", "Medium", "High"] as Confidence[]).map((level) => <button key={level} aria-pressed={answerConfidence === level} onClick={() => setAnswerConfidence(level)}>{level}</button>)}</div>
                       </div>
-                      <button className="primary-button submit" disabled={(isWritten ? !writtenAnswer.trim() : selected === null) || answerConfidence === null || saving} onClick={checkAnswer}>{saving ? "Saving evidence…" : isWritten ? "Open mark scheme" : "Check answer"}</button>
+                      <button className="primary-button submit" disabled={(isWritten ? !writtenAnswer.trim() : selected === null) || answerConfidence === null || saving} onClick={checkAnswer}>{saving ? "Scoring response…" : isWritten ? "Score answer automatically" : "Check answer"}</button>
                     </div>
                   ) : marked && (
                     <div className={lastResult?.correct ? "feedback success" : "feedback retry"}>

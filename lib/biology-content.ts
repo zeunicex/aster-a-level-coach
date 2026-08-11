@@ -1,16 +1,17 @@
 import { biomoleculeQuestions as biomoleculeSeedQuestions, type BiomoleculeQuestion } from "./biomolecules.ts";
 import { biomoleculeMatureQuestions, enzymeMatureQuestions, transportMatureQuestions } from "./core1-mature-questions.ts";
 import { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions } from "./core2-questions.ts";
+import { eukaryoteQuestions, inheritanceQuestions, prokaryoteQuestions, virusQuestions } from "./new-biology-packs.ts";
 
-export { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions };
+export { cellCycleQuestions, eukaryoteQuestions, geneExpressionQuestions, inheritanceQuestions, mutationQuestions, prokaryoteQuestions, techniqueQuestions, virusQuestions };
 
 export type BiologyQuestion = BiomoleculeQuestion;
 
 export const biomoleculeQuestions: BiologyQuestion[] = [...biomoleculeSeedQuestions, ...biomoleculeMatureQuestions];
 
 export const syllabusAreas = [
-  { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(u)", outcomes: 21, sourced: 17, verified: 10, status: "In verification", note: "Biomolecules, membranes and enzymes are live. Cell Structure 1(a)–1(d) has no supplied PDF." },
-  { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 12, status: "In verification", note: "DNA replication, gene expression, molecular techniques, mutation, cancer and cell-cycle outcomes are live across four mature packs." },
+  { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(u)", outcomes: 21, sourced: 17, verified: 14, status: "In verification", note: "Viruses, biomolecules, membranes, enzymes and stem cells are live. Cell Structure 1(a)–1(d) has no supplied PDF." },
+  { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 28, status: "In verification", note: "Thirteen mature Biology packs now cover genome organisation, inheritance and the existing molecular and cell-cycle units." },
   { code: "Core 3", title: "Energy and Equilibrium", range: "3(a)–3(p)", outcomes: 16, sourced: 15, verified: 11, status: "In verification", note: "Energy transformation 3(a)–3(j) and 3(l) is live. The supplied respiration PDF does not cover investigation outcome 3(k); signalling 3(m)–3(p) remains mapped." },
   { code: "Core 4", title: "Biological Evolution", range: "4(a)–4(n)", outcomes: 14, sourced: 14, verified: 0, status: "Mapped", note: "Evolution source indexed and awaiting question validation." },
   { code: "Extension A", title: "Infectious Diseases", range: "A(a)–A(k)", outcomes: 11, sourced: 11, verified: 0, status: "Mapped", note: "Viruses, bacteria, immunity and infectious diseases indexed." },
@@ -34,10 +35,10 @@ export const pdfPipeline = [
   { order: 8, name: "DNA Replication & Gene Expression.pdf", pages: 52, images: 124, mapping: "2(a)–2(b)", status: "Verified", questions: 30 },
   { order: 9, name: "DNA Mutations & Its Consequences.pdf", pages: 39, images: 86, mapping: "2(l)–2(m), 2(p)–2(r)", status: "Verified", questions: 30 },
   { order: 10, name: "Molecular Techniques in DNA Analysis.pdf", pages: 27, images: 38, mapping: "2(k)", status: "Verified", questions: 30 },
-  { order: 11, name: "OCGE in Eukaryotes & Stem Cell.pdf", pages: 96, images: 183, mapping: "Core 1 / Core 2", status: "Mapped", questions: 0 },
-  { order: 12, name: "Viruses.pdf", pages: 42, images: 127, mapping: "1(e)–1(f) / Ext A", status: "Mapped", questions: 0 },
-  { order: 13, name: "OCGE in Prokaryotes (Bacteria).pdf", pages: 44, images: 77, mapping: "Core 2 / Ext A", status: "Mapped", questions: 0 },
-  { order: 14, name: "Inheritance.pdf", pages: 75, images: 161, mapping: "Core 2", status: "Mapped", questions: 0 },
+  { order: 11, name: "OCGE in Eukaryotes & Stem Cell.pdf", pages: 96, images: 183, mapping: "1(t)–1(u), 2(d), 2(h)–2(i)", status: "Verified", questions: 30 },
+  { order: 12, name: "Viruses.pdf", pages: 42, images: 127, mapping: "1(e)–1(f), 2(d)–2(f)", status: "Verified", questions: 30 },
+  { order: 13, name: "OCGE in Prokaryotes (Bacteria).pdf", pages: 44, images: 77, mapping: "2(d), 2(g)", status: "Verified", questions: 30 },
+  { order: 14, name: "Inheritance.pdf", pages: 75, images: 161, mapping: "2(u)–2(dd)", status: "Verified", questions: 30 },
   { order: 15, name: "Cell Communication.pdf", pages: 30, images: 71, mapping: "Core 3", status: "Mapped", questions: 0 },
   { order: 16, name: "Biological Evolution.pdf", pages: 64, images: 184, mapping: "Core 4", status: "Mapped", questions: 0 },
   { order: 17, name: "Immunity & Infectious Diseases.pdf", pages: 51, images: 87, mapping: "Extension A", status: "Mapped", questions: 0 },
@@ -665,6 +666,10 @@ export const verifiedBiologyQuestions: BiologyQuestion[] = [
   ...geneExpressionQuestions,
   ...mutationQuestions,
   ...techniqueQuestions,
+  ...eukaryoteQuestions,
+  ...virusQuestions,
+  ...prokaryoteQuestions,
+  ...inheritanceQuestions,
 ];
 
 export const verifiedBiologyAnswerKey = Object.fromEntries(

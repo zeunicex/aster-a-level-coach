@@ -1,23 +1,21 @@
 import { env } from "cloudflare:workers";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { visitorIdentity, visitorJson } from "@/app/visitor";
 import { getStore } from "@/db/runtime";
 
-async function currentUserId() {
-  return (await getChatGPTUser())?.userId ?? "local-preview";
-}
-
-export async function GET() {
-  const userId = await currentUserId();
+export async function GET(request: Request) {
+  const identity = await visitorIdentity(request);
+  const userId = identity.userId;
   const db = await getStore();
   const rows = await db.prepare(`
     SELECT id, name, content_type AS contentType, size, status, pages, created_at AS createdAt
     FROM materials WHERE user_id = ? ORDER BY created_at DESC
   `).bind(userId).all();
-  return Response.json({ materials: rows.results });
+  return visitorJson({ materials: rows.results }, identity);
 }
 
 export async function POST(request: Request) {
-  const userId = await currentUserId();
+  const identity = await visitorIdentity(request);
+  const userId = identity.userId;
   const data = await request.formData();
   const file = data.get("file");
   if (!(file instanceof File)) return Response.json({ error: "Choose a file first" }, { status: 400 });
@@ -39,11 +37,12 @@ export async function POST(request: Request) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
     .bind(id, userId, file.name, file.type || "application/octet-stream", file.size, objectKey, status, createdAt).run();
 
-  return Response.json({ material: { id, name: file.name, contentType: file.type, size: file.size, status, createdAt } }, { status: 201 });
+  return visitorJson({ material: { id, name: file.name, contentType: file.type, size: file.size, status, createdAt } }, identity, { status: 201 });
 }
 
 export async function DELETE(request: Request) {
-  const userId = await currentUserId();
+  const identity = await visitorIdentity(request);
+  const userId = identity.userId;
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return Response.json({ error: "Material id is required" }, { status: 400 });
   const db = await getStore();
