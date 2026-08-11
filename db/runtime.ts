@@ -50,6 +50,13 @@ export async function getStore() {
       email TEXT NOT NULL,
       created_at TEXT NOT NULL
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS student_profiles (
+      user_id TEXT PRIMARY KEY,
+      display_name TEXT NOT NULL,
+      class_code TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`),
     db.prepare(`CREATE TABLE IF NOT EXISTS content_packs (
       pack_order INTEGER PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
@@ -70,6 +77,7 @@ export async function getStore() {
     )`),
     db.prepare("CREATE INDEX IF NOT EXISTS idx_attempts_user_created ON attempts(user_id, created_at)"),
     db.prepare("CREATE INDEX IF NOT EXISTS idx_materials_user_created ON materials(user_id, created_at)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS idx_student_profiles_class ON student_profiles(class_code)"),
     db.prepare("CREATE INDEX IF NOT EXISTS idx_pack_releases_order_changed ON pack_releases(pack_order, changed_at)"),
   ]);
 
@@ -78,6 +86,7 @@ export async function getStore() {
   if (!names.has("awarded_marks")) await db.prepare("ALTER TABLE attempts ADD COLUMN awarded_marks INTEGER").run();
   if (!names.has("total_marks")) await db.prepare("ALTER TABLE attempts ADD COLUMN total_marks INTEGER").run();
   if (!names.has("missed_points")) await db.prepare("ALTER TABLE attempts ADD COLUMN missed_points TEXT").run();
+  await db.prepare("PRAGMA optimize").run();
 
   return db;
 }

@@ -51,6 +51,14 @@ export const admins = sqliteTable("admins", {
   createdAt: text("created_at").notNull(),
 });
 
+export const studentProfiles = sqliteTable("student_profiles", {
+  userId: text("user_id").primaryKey(),
+  displayName: text("display_name").notNull(),
+  classCode: text("class_code").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [index("idx_student_profiles_class").on(table.classCode)]);
+
 export const contentPacks = sqliteTable("content_packs", {
   packOrder: integer("pack_order").primaryKey(),
   name: text("name").notNull().unique(),

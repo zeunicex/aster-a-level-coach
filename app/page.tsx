@@ -6,7 +6,7 @@ import { packOrderForSource, pdfPipeline, practicalSkills, syllabusAreas, verifi
 import { gradeStructuredAnswer } from "@/lib/marking.mjs";
 
 type Subject = "Biology" | "Chemistry";
-type View = "today" | "map" | "pipeline" | "library" | "progress";
+type View = "today" | "map" | "pipeline" | "library" | "progress" | "activity";
 type Confidence = "Low" | "Medium" | "High";
 type Skill = "Knowledge" | "Application" | "Image" | "Exam technique";
 type SessionKind = "quick" | "practice" | "diagnostic";
@@ -51,6 +51,9 @@ type FileItem = { id?: string; name: string; meta: string; tag: string; status?:
 type LearningGap = { point: string; code: string; count: number };
 type SessionResult = { code: string; topic: string; correct: boolean; secure: boolean; format: QuestionFormat; missedPoints: string[] };
 type PackState = { packOrder: number; name: string; status: PackStatus; version: number; releaseNote: string; updatedAt: string };
+type StudentProfile = { displayName: string; classCode: string };
+type TeacherStudent = { displayName: string; classCode: string; attempts: number; accuracy: number; mastered: number; weak: string[]; lastActive: string; activeRecently: boolean };
+type ActivityData = { classCode: string; students: TeacherStudent[]; summary: { students: number; attempts: number; activeRecently: number; averageAccuracy: number } };
 const formatLabels: Record<QuestionFormat, string> = {
   mcq: "Multiple choice",
   image: "Image interpretation",
@@ -435,6 +438,7 @@ const nav: { id: View; label: string; icon: string }[] = [
   { id: "pipeline", label: "Content pipeline", icon: "◫" },
   { id: "library", label: "My materials", icon: "▤" },
   { id: "progress", label: "Progress", icon: "↗" },
+  { id: "activity", label: "Teacher activity", icon: "◉" },
 ];
 
 function Ring({ value, size = 42 }: { value: number; size?: number }) {
@@ -443,6 +447,11 @@ function Ring({ value, size = 42 }: { value: number; size?: number }) {
       <span>{value}</span>
     </span>
   );
+}
+
+function activityTime(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "No activity yet" : new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
 function SourceVisual({ kind }: { kind: Question["visual"] }) {
@@ -500,6 +509,14 @@ export default function Home() {
   const [packAdmin, setPackAdmin] = useState(false);
   const [packSaving, setPackSaving] = useState<number | null>(null);
   const [packNotice, setPackNotice] = useState("");
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [studentName, setStudentName] = useState("");
+  const [classCode, setClassCode] = useState("");
+  const [enrollmentError, setEnrollmentError] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const [activity, setActivity] = useState<ActivityData | null>(null);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [files, setFiles] = useState<FileItem[]>([
     { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
@@ -560,12 +577,13 @@ export default function Home() {
     fetch(`/api/learning?subject=${subject}`)
       .then((response) => response.ok ? response.json() : Promise.reject())
       .then(async (learning) => {
-        const [materials, packs] = await Promise.all([
+        const [materials, packs, student] = await Promise.all([
           fetch("/api/materials").then((response) => response.ok ? response.json() : Promise.reject()),
           fetch("/api/packs").then((response) => response.ok ? response.json() : Promise.reject()),
+          fetch("/api/activity?student=1").then((response) => response.ok ? response.json() : Promise.reject()),
         ]);
-        return [learning, materials, packs];
-      }).then(([learning, materials, packs]) => {
+        return [learning, materials, packs, student];
+      }).then(([learning, materials, packs, student]) => {
       if (!active) return;
       setMasteryState((current) => ({ ...current, [subject]: learning.mastery as MasteryItem[] }));
       setTodayStats(learning.todayStats ?? { answered: 0, secure: 0 });
@@ -573,6 +591,8 @@ export default function Home() {
       setTotalAttempts(learning.attempts ?? 0);
       setPackStates(packs.packs as PackState[]);
       setPackAdmin(Boolean(packs.isAdmin));
+      setStudentProfile(student.profile as StudentProfile | null);
+      setProfileLoaded(true);
       const base: FileItem[] = subject === "Biology" ? [
         { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
@@ -604,6 +624,30 @@ export default function Home() {
     }).catch(() => active && setCloudStatus("Cloud save unavailable · retry on refresh"));
     return () => { active = false; };
   }, [subject]);
+
+  useEffect(() => {
+    if (!packAdmin) return;
+    fetch("/api/activity")
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((result) => setActivity(result as ActivityData))
+      .catch(() => setActivity(null))
+      .finally(() => setActivityLoading(false));
+  }, [packAdmin]);
+
+  async function registerStudent(event: React.FormEvent) {
+    event.preventDefault();
+    setRegistering(true);
+    setEnrollmentError("");
+    const response = await fetch("/api/activity", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ displayName: studentName, classCode }),
+    });
+    const result = await response.json();
+    if (response.ok) setStudentProfile(result.profile as StudentProfile);
+    else setEnrollmentError(result.error ?? "Unable to join this class");
+    setRegistering(false);
+  }
 
   function startSession(kind: SessionKind = "practice", focusCode?: string) {
     const target = kind === "diagnostic" ? 8 : kind === "quick" ? 6 : minutes === 15 ? 5 : minutes === 40 ? 12 : 8;
@@ -823,7 +867,7 @@ export default function Home() {
 
         <nav aria-label="Main navigation">
           <p className="nav-label">Study</p>
-          {nav.map((item) => (
+          {nav.filter((item) => item.id !== "activity" || packAdmin).map((item) => (
             <button key={item.id} className={view === item.id ? "nav-item active" : "nav-item"} onClick={() => { setView(item.id); setSession(false); }}>
               <span>{item.icon}</span>{item.label}
               {item.id === "pipeline" && subject === "Biology" && <em>17</em>}
@@ -839,7 +883,7 @@ export default function Home() {
           <div className="mini-progress"><span style={{ width: `${average}%` }} /></div>
           <small>{average}% syllabus mastery</small>
         </div>
-        <button className="profile"><span>M</span><div><strong>Maya</strong><small>Target grade · A</small></div><i>•••</i></button>
+        <button className="profile"><span>{packAdmin ? "E" : studentProfile?.displayName[0]?.toUpperCase() ?? "S"}</span><div><strong>{packAdmin ? "Owner" : studentProfile?.displayName ?? "Student"}</strong><small>{packAdmin ? "Teacher activity enabled" : "Target grade · A"}</small></div><i>•••</i></button>
       </aside>
 
       <section className="workspace">
@@ -1062,6 +1106,17 @@ export default function Home() {
             </div>
             <article className="panel mapping-panel"><div className="panel-heading"><div><h3>Source alignment</h3><p>Coverage of the active {subject} syllabus</p></div><b>{subject === "Biology" ? `${livePackCount} packs verified` : "Source pack needed"}</b></div><div className="coverage-bar"><span style={{ width: subject === "Biology" ? "95%" : "8%" }} /></div><div className="coverage-legend"><span><i className="covered" />Core 1 foundations, Core 2 genetics sequence and Core 3 energy transformation are live</span><span><i className="partial" />1(a)–1(d) and 3(k) source missing</span><button onClick={() => setView(subject === "Biology" ? "pipeline" : "map")}>{subject === "Biology" ? "Open processing console" : "Review mapping"} →</button></div></article>
           </section>
+        ) : view === "activity" ? (
+          <section className="page-content teacher-page">
+            <div className="page-heading"><div><p>Owner-only learning evidence</p><h1>Teacher Activity</h1><span>See who is practising, where they are secure and which objectives need support.</span></div><div className="class-code"><small>Student class code</small><strong>{activity?.classCode ?? "ASTER9477"}</strong></div></div>
+            <div className="activity-summary"><article><span>Students</span><b>{activity?.summary.students ?? 0}</b><small>joined this class</small></article><article><span>Questions answered</span><b>{activity?.summary.attempts ?? 0}</b><small>saved across students</small></article><article><span>Active in 7 days</span><b>{activity?.summary.activeRecently ?? 0}</b><small>recent learners</small></article><article><span>Average accuracy</span><b>{activity?.summary.averageAccuracy ?? 0}%</b><small>across saved attempts</small></article></div>
+            <article className="panel activity-table">
+              <div className="activity-header"><span>Student</span><span>Practice</span><span>Accuracy</span><span>Mastered</span><span>Needs support</span><span>Last active</span></div>
+              {activityLoading ? <div className="activity-empty"><strong>Loading student activity…</strong></div> : activity?.students.length ? activity.students.map((student, index) => (
+                <div className="activity-row" key={`${student.classCode}-${student.displayName}-${index}`}><div><span>{student.displayName[0]?.toUpperCase()}</span><strong>{student.displayName}</strong><small>{student.classCode}</small></div><b>{student.attempts} questions</b><div className="activity-accuracy"><span><i style={{ width: `${student.accuracy}%` }} /></span><b>{student.accuracy}%</b></div><em>{student.mastered} objectives</em><p>{student.weak.length ? student.weak.join(" · ") : "No evidence yet"}</p><time>{activityTime(student.lastActive)}</time></div>
+              )) : <div className="activity-empty"><strong>No students have joined yet</strong><p>Send the public Aster link and class code <b>{activity?.classCode ?? "ASTER9477"}</b>. Their activity will appear here after registration.</p></div>}
+            </article>
+          </section>
         ) : (
           <section className="page-content progress-page">
             <div className="page-heading"><div><p>Live learning record</p><h1>Your learning progress</h1><span>Only saved answers, mastery evidence and scheduled reviews appear here.</span></div><button className="primary-button" onClick={() => startSession("practice")}>Continue today’s plan →</button></div>
@@ -1070,6 +1125,7 @@ export default function Home() {
           </section>
         )}
       </section>
+      {profileLoaded && !packAdmin && !studentProfile && <div className="enrollment-backdrop" role="dialog" aria-modal="true" aria-labelledby="join-title"><form className="enrollment-card" onSubmit={registerStudent}><span className="brand-mark">A</span><p>Join your Biology class</p><h1 id="join-title">Start your personal learning record</h1><small>Your name lets your teacher see your progress. Other students cannot see it.</small><label>Student name<input value={studentName} maxLength={40} onChange={(event) => setStudentName(event.target.value)} placeholder="e.g. Sarah" required /></label><label>Class code<input value={classCode} maxLength={20} onChange={(event) => setClassCode(event.target.value.toUpperCase())} placeholder="Code from your teacher" autoCapitalize="characters" required /></label>{enrollmentError && <div className="enrollment-error" role="alert">{enrollmentError}</div>}<button className="primary-button" disabled={registering}>{registering ? "Joining…" : "Join class and continue"}</button></form></div>}
     </main>
   );
 }
