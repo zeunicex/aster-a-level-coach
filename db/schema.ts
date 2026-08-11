@@ -44,3 +44,29 @@ export const materials = sqliteTable("materials", {
   pages: integer("pages"),
   createdAt: text("created_at").notNull(),
 }, (table) => [index("idx_materials_user_created").on(table.userId, table.createdAt)]);
+
+export const admins = sqliteTable("admins", {
+  userId: text("user_id").primaryKey(),
+  email: text("email").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const contentPacks = sqliteTable("content_packs", {
+  packOrder: integer("pack_order").primaryKey(),
+  name: text("name").notNull().unique(),
+  status: text("status").notNull().default("Draft"),
+  version: integer("version").notNull().default(0),
+  releaseNote: text("release_note").notNull().default(""),
+  updatedBy: text("updated_by"),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const packReleases = sqliteTable("pack_releases", {
+  id: text("id").primaryKey(),
+  packOrder: integer("pack_order").notNull(),
+  version: integer("version").notNull(),
+  status: text("status").notNull(),
+  releaseNote: text("release_note").notNull().default(""),
+  changedBy: text("changed_by").notNull(),
+  changedAt: text("changed_at").notNull(),
+}, (table) => [index("idx_pack_releases_order_changed").on(table.packOrder, table.changedAt)]);

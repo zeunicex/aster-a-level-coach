@@ -38,6 +38,20 @@ export const pdfPipeline = [
   { order: 18, name: "Climate Change.pdf", pages: 51, images: 47, mapping: "Extension B", status: "Mapped", questions: 0 },
 ] as const;
 
+export type PackStatus = "Draft" | "Verified" | "Live";
+
+export function packOrderForSource(source: string): number | null {
+  const normalized = source.toLowerCase();
+  return pdfPipeline.find((pack) => normalized.includes(pack.name.replace(/\.pdf$/i, "").toLowerCase()))?.order ?? null;
+}
+
+export function canTransitionPack(current: PackStatus, next: PackStatus, questions: number): boolean {
+  if (current === next) return true;
+  if (current === "Draft" && next === "Verified") return questions > 0;
+  if (current === "Verified" && (next === "Live" || next === "Draft")) return true;
+  return current === "Live" && next === "Draft";
+}
+
 export const enzymeQuestions: BiologyQuestion[] = [
   {
     id: "bio-enzyme-active-site", code: "1(p)", eyebrow: "Verified source · mechanism", objective: "1(p) Enzyme mode of action", marks: 2, skill: "Knowledge", difficulty: 1,

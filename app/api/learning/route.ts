@@ -1,6 +1,7 @@
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getStore } from "@/db/runtime";
-import { verifiedBiologyAnswerKey } from "@/lib/biology-content";
+import { seedContentPacks } from "@/db/packs";
+import { packOrderForSource, verifiedBiologyAnswerKey } from "@/lib/biology-content";
 import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, nextReviewDate, normalizeReviewDate } from "@/lib/adaptive.mjs";
 
 const seedMastery = {
@@ -101,6 +102,10 @@ export async function POST(request: Request) {
 
   const userId = await currentUserId();
   const db = await getStore();
+  await seedContentPacks(db);
+  const packOrder = packOrderForSource(question.source);
+  const pack = packOrder === null ? null : await db.prepare("SELECT status FROM content_packs WHERE pack_order = ?").bind(packOrder).first<{ status: string }>();
+  if (pack?.status !== "Live") return Response.json({ error: "This content pack is not published" }, { status: 409 });
   const existing = await db.prepare(`
     SELECT * FROM mastery WHERE user_id = ? AND subject = 'Biology' AND code = ?
   `).bind(userId, question.code).first<Record<string, number | string>>();

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, pickNextQuestion, reviewLabel } from "@/lib/adaptive.mjs";
-import { pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions } from "@/lib/biology-content";
+import { packOrderForSource, pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions, type PackStatus } from "@/lib/biology-content";
 
 type Subject = "Biology" | "Chemistry";
 type View = "today" | "map" | "pipeline" | "library" | "progress";
@@ -48,6 +48,7 @@ type Question = {
 type FileItem = { id?: string; name: string; meta: string; tag: string; status?: string };
 type LearningGap = { point: string; code: string; count: number };
 type SessionResult = { code: string; topic: string; correct: boolean; secure: boolean; format: QuestionFormat; missedPoints: string[] };
+type PackState = { packOrder: number; name: string; status: PackStatus; version: number; releaseNote: string; updatedAt: string };
 const formatLabels: Record<QuestionFormat, string> = {
   mcq: "Multiple choice",
   image: "Image interpretation",
@@ -56,6 +57,15 @@ const formatLabels: Record<QuestionFormat, string> = {
   structured: "Structured response",
   practical: "Practical planning",
 };
+
+const initialPackStates: PackState[] = pdfPipeline.map((pack) => ({
+  packOrder: pack.order,
+  name: pack.name,
+  status: pack.status === "Verified" ? "Live" : "Draft",
+  version: pack.status === "Verified" ? (pack.questions >= 30 ? 2 : 1) : 0,
+  releaseNote: "",
+  updatedAt: "",
+}));
 
 const initialMastery: Record<Subject, MasteryItem[]> = {
   Biology: [
@@ -452,6 +462,10 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
   const [cloudStatus, setCloudStatus] = useState("Connecting to saved progress…");
   const [uploading, setUploading] = useState(false);
+  const [packStates, setPackStates] = useState<PackState[]>(initialPackStates);
+  const [packAdmin, setPackAdmin] = useState(false);
+  const [packSaving, setPackSaving] = useState<number | null>(null);
+  const [packNotice, setPackNotice] = useState("");
   const [files, setFiles] = useState<FileItem[]>([
     { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
     { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
@@ -472,6 +486,15 @@ export default function Home() {
   const today = dateKey();
   const dailyPlan = useMemo(() => [...currentMastery].sort((a, b) => Number(isReviewDue(b.due, today)) - Number(isReviewDue(a.due, today)) || a.score - b.score || a.evidence - b.evidence).slice(0, 5), [currentMastery, today]);
   const dueCount = currentMastery.filter((item) => isReviewDue(item.due, today)).length;
+  const liveBiologyQuestions = useMemo(() => {
+    const liveOrders = new Set(packStates.filter((pack) => pack.status === "Live").map((pack) => pack.packOrder));
+    return verifiedBiologyQuestions.filter((question) => {
+      const order = packOrderForSource(question.source);
+      return order !== null && liveOrders.has(order);
+    });
+  }, [packStates]);
+  const livePackCount = packStates.filter((pack) => pack.status === "Live").length;
+  const draftPackCount = packStates.filter((pack) => pack.status === "Draft").length;
 
   const weakTopic = useMemo(() => [...currentMastery].sort((a, b) => a.score - b.score)[0], [currentMastery]);
   const sessionGaps = [...new Set(sessionResults.flatMap((result) => result.missedPoints))];
@@ -488,12 +511,15 @@ export default function Home() {
     Promise.all([
       fetch(`/api/learning?subject=${subject}`).then((response) => response.ok ? response.json() : Promise.reject()),
       fetch("/api/materials").then((response) => response.ok ? response.json() : Promise.reject()),
-    ]).then(([learning, materials]) => {
+      fetch("/api/packs").then((response) => response.ok ? response.json() : Promise.reject()),
+    ]).then(([learning, materials, packs]) => {
       if (!active) return;
       setMasteryState((current) => ({ ...current, [subject]: learning.mastery as MasteryItem[] }));
       setTodayStats(learning.todayStats ?? { answered: 0, secure: 0 });
       setLearningGaps(learning.missedPoints ?? []);
       setTotalAttempts(learning.attempts ?? 0);
+      setPackStates(packs.packs as PackState[]);
+      setPackAdmin(Boolean(packs.isAdmin));
       const base: FileItem[] = subject === "Biology" ? [
         { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
@@ -520,9 +546,14 @@ export default function Home() {
 
   function startSession(kind: SessionKind = "practice", focusCode?: string) {
     const target = kind === "diagnostic" ? 8 : kind === "quick" ? 6 : minutes === 15 ? 5 : minutes === 40 ? 12 : 8;
-    const pool = subject === "Biology" ? verifiedBiologyQuestions : questions[subject];
+    const pool = subject === "Biology" ? liveBiologyQuestions : questions[subject];
     const focusedPool = focusCode ? pool.filter((question) => question.code === focusCode) : pool;
     const first = pickNextQuestion({ questions: focusedPool, seenIds: [], mastery: currentMastery, preferredFormats });
+    if (!first) {
+      setCloudStatus("No published questions are available for this objective yet");
+      setSession(false);
+      return;
+    }
     setSessionKind(kind);
     setSessionTarget(target);
     setSessionQuestions(first ? [first] : []);
@@ -639,7 +670,7 @@ export default function Home() {
       return;
     }
     const next = pickNextQuestion({
-      questions: subject === "Biology" ? verifiedBiologyQuestions : questions[subject],
+      questions: subject === "Biology" ? liveBiologyQuestions : questions[subject],
       seenIds: sessionQuestions.map((question) => question.id),
       mastery: currentMastery,
       lastResult,
@@ -664,6 +695,30 @@ export default function Home() {
   function changeSubject(next: Subject) {
     setSubject(next);
     setSession(false);
+  }
+
+  async function updatePack(packOrder: number, status: PackStatus) {
+    const current = packStates.find((pack) => pack.packOrder === packOrder);
+    if (!current || !packAdmin) return;
+    if (current.status === "Live" && status === "Draft" && !window.confirm("Unpublish this pack? Students will stop receiving its questions immediately.")) return;
+    setPackSaving(packOrder);
+    setPackNotice("");
+    try {
+      const response = await fetch("/api/packs", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ packOrder, status, releaseNote: current.releaseNote }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Pack update failed");
+      setPackStates((packs) => packs.map((pack) => pack.packOrder === packOrder ? result.pack : pack));
+      setPackNotice(status === "Live" ? "Pack published. It is now in adaptive practice." : status === "Verified" ? "Pack verified. It is ready for final publishing." : "Pack unpublished. Its questions are no longer served to students.");
+      setSession(false);
+    } catch (error) {
+      setPackNotice(error instanceof Error ? error.message : "Pack update failed");
+    } finally {
+      setPackSaving(null);
+    }
   }
 
   async function addFiles(list: FileList | null) {
@@ -890,7 +945,7 @@ export default function Home() {
 
               <article className="panel setup-panel">
                 <div className="panel-heading"><div><h3>Shape this session</h3><p>Preference guides the format; performance guides the content.</p></div></div>
-                <label>Question approach</label>
+                <div className="setup-label">Question approach</div>
                 <div className="mode-list">
                   {["Adaptive", "Exam-style", "Image-heavy"].map((item) => <button key={item} className={mode === item ? "active" : ""} onClick={() => setMode(item)}><span>{item === "Adaptive" ? "✦" : item === "Exam-style" ? "▤" : "▧"}</span><div><strong>{item}</strong><small>{item === "Adaptive" ? "Best next question" : item === "Exam-style" ? "Paper wording & marks" : "Figures, graphs & diagrams"}</small></div><i>{mode === item ? "●" : "○"}</i></button>)}
                 </div>
@@ -930,12 +985,13 @@ export default function Home() {
           </section>
         ) : view === "pipeline" ? (
           <section className="page-content pipeline-page">
-            <div className="page-heading"><div><p>Biology content operations</p><h1>{subject === "Biology" ? "Pack Studio" : "Chemistry content pipeline"}</h1><span>{subject === "Biology" ? "A single release path keeps every new chapter source-linked, reviewable and safe to update." : "Add the Chemistry source pack to begin mapping."}</span></div><button className="outline-button" onClick={() => setView("library")}>Manage sources</button></div>
+            <div className="page-heading"><div><p>Biology content operations</p><h1>{subject === "Biology" ? "Pack Studio" : "Chemistry content pipeline"}</h1><span>{subject === "Biology" ? "A single release path keeps every new chapter source-linked, reviewable and safe to update." : "Add the Chemistry source pack to begin mapping."}</span></div><div className="pack-heading-actions">{subject === "Biology" && <span className={`access-badge ${packAdmin ? "owner" : "readonly"}`}>{packAdmin ? "Owner controls active" : "Student · read-only"}</span>}<button className="outline-button" onClick={() => setView("library")}>Manage sources</button></div></div>
             {subject === "Biology" ? <>
-              <div className="pipeline-summary"><article><span>Live packs</span><b>5</b><small>available to students</small></article><article><span>Draft packs</span><b>12</b><small>mapped, not yet released</small></article><article><span>Live questions</span><b>96</b><small>all source-linked</small></article><article><span>Source gaps</span><b>2</b><small>kept out of release</small></article></div>
+              <div className="pipeline-summary"><article><span>Live packs</span><b>{livePackCount}</b><small>available to students</small></article><article><span>Draft packs</span><b>{draftPackCount}</b><small>mapped, not yet released</small></article><article><span>Live questions</span><b>{liveBiologyQuestions.length}</b><small>all source-linked</small></article><article><span>Source gaps</span><b>2</b><small>kept out of release</small></article></div>
               <article className="panel release-flow"><div><b>1</b><span><strong>Draft</strong><small>PDF indexed and syllabus mapped</small></span></div><i>→</i><div><b>2</b><span><strong>Verified</strong><small>Questions, mark points and pages checked</small></span></div><i>→</i><div><b>3</b><span><strong>Live</strong><small>Versioned pack enters adaptive practice</small></span></div></article>
+              {packNotice && <div className="pack-notice" role="status">{packNotice}</div>}
               <article className="pipeline-warning"><span>!</span><div><strong>Two source gaps remain visible</strong><p>Cell Structure outcomes 1(a)–1(d) have no supplied PDF, and Cellular Respiration does not cover investigation outcome 3(k). Aster leaves them unverified instead of inferring evidence.</p></div></article>
-              <article className="panel pipeline-table"><div className="pipeline-header"><span>Content pack</span><span>9477 mapping</span><span>Question design</span><span>Release</span><span>Next gate</span></div>{pdfPipeline.map((file) => { const live = file.status === "Verified"; const mature = file.questions >= 30; return <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.pages} pages · {file.images} figures</small></div></div><b>{file.mapping}</b><p>{file.questions ? `${file.questions} questions · ${mature ? "6 formats" : "MCQ seed"}` : "Question drafting not started"}</p><em className={live ? "live" : "draft"}>{live ? `● Live ${mature ? "v2" : "v1"}` : "○ Draft v0"}</em><small>{mature ? "Monitor student evidence" : live ? "Add structured, data and image variants" : "Draft and source-check questions"}</small></div>; })}</article>
+              <article className="panel pipeline-table"><div className="pipeline-header"><span>Content pack</span><span>9477 mapping</span><span>Question design</span><span>Release</span><span>{packAdmin ? "Owner action" : "Next gate"}</span></div>{pdfPipeline.map((file) => { const pack = packStates.find((item) => item.packOrder === file.order) ?? initialPackStates.find((item) => item.packOrder === file.order)!; const mature = file.questions >= 30; const working = packSaving === file.order; const nextStatus: PackStatus | null = pack.status === "Draft" && file.questions ? "Verified" : pack.status === "Verified" ? "Live" : pack.status === "Live" ? "Draft" : null; return <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.pages} pages · {file.images} figures</small></div></div><b>{file.mapping}</b><p>{file.questions ? `${file.questions} questions · ${mature ? "6 formats" : "MCQ seed"}` : "Question drafting not started"}</p><em className={pack.status.toLowerCase()}>{pack.status === "Live" ? `● Live v${pack.version}` : pack.status === "Verified" ? `◐ Verified v${pack.version}` : `○ Draft v${pack.version}`}</em><div className="pack-gate"><small>{mature ? "Monitor student evidence" : pack.status === "Live" ? "Add structured, data and image variants" : file.questions ? "Source-check before release" : "Draft questions first"}</small>{packAdmin && <button disabled={!nextStatus || working} onClick={() => nextStatus && updatePack(file.order, nextStatus)}>{working ? "Saving…" : nextStatus === "Verified" ? "Mark verified" : nextStatus === "Live" ? "Publish" : nextStatus === "Draft" ? "Unpublish" : "Needs questions"}</button>}</div></div>; })}</article>
             </> : <article className="panel empty-pipeline"><span>＋</span><h3>No Chemistry source pack yet</h3><p>Upload the coursebook and syllabus to create the same source-to-objective pipeline.</p><button className="primary-button" onClick={() => fileInput.current?.click()}>Upload material</button></article>}
           </section>
         ) : view === "library" ? (

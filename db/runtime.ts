@@ -45,8 +45,32 @@ export async function getStore() {
       pages INTEGER,
       created_at TEXT NOT NULL
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS admins (
+      user_id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS content_packs (
+      pack_order INTEGER PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'Draft',
+      version INTEGER NOT NULL DEFAULT 0,
+      release_note TEXT NOT NULL DEFAULT '',
+      updated_by TEXT,
+      updated_at TEXT NOT NULL
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS pack_releases (
+      id TEXT PRIMARY KEY,
+      pack_order INTEGER NOT NULL,
+      version INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      release_note TEXT NOT NULL DEFAULT '',
+      changed_by TEXT NOT NULL,
+      changed_at TEXT NOT NULL
+    )`),
     db.prepare("CREATE INDEX IF NOT EXISTS idx_attempts_user_created ON attempts(user_id, created_at)"),
     db.prepare("CREATE INDEX IF NOT EXISTS idx_materials_user_created ON materials(user_id, created_at)"),
+    db.prepare("CREATE INDEX IF NOT EXISTS idx_pack_releases_order_changed ON pack_releases(pack_order, changed_at)"),
   ]);
 
   const attemptColumns = await db.prepare("PRAGMA table_info(attempts)").all<{ name: string }>();
