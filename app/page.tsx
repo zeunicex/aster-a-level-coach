@@ -511,6 +511,7 @@ export default function Home() {
   }, [packStates]);
   const livePackCount = packStates.filter((pack) => pack.status === "Live").length;
   const draftPackCount = packStates.filter((pack) => pack.status === "Draft").length;
+  const verifiedObjectiveCount = syllabusAreas.reduce((total, area) => total + area.verified, 0);
 
   const weakTopic = useMemo(() => [...currentMastery].sort((a, b) => a.score - b.score)[0], [currentMastery]);
   const sessionGaps = [...new Set(sessionResults.flatMap((result) => result.missedPoints))];
@@ -978,7 +979,7 @@ export default function Home() {
             <div className="page-heading"><div><p>Singapore–Cambridge · H2 {subject === "Biology" ? "9477" : "9476"} · 2026</p><h1>{subject === "Biology" ? "Complete syllabus map" : "Syllabus mastery map"}</h1><span>{subject === "Biology" ? "Coverage tells you what the sources contain; mastery tells you what you can reliably do." : "Mastery and evidence confidence are separate, so an early estimate never looks final."}</span></div><button className="primary-button" onClick={() => startSession("practice")}>Practise weak areas →</button></div>
             {subject === "Biology" ? (
               <>
-                <div className="coverage-summary"><article><b>101</b><span>Content outcomes mapped</span></article><article><b>96</b><span>Covered by supplied PDFs</span></article><article><b>21</b><span>Objectives fully verified</span></article><article className="missing"><b>5</b><span>Missing source outcomes</span></article></div>
+                <div className="coverage-summary"><article><b>101</b><span>Content outcomes mapped</span></article><article><b>96</b><span>Covered by supplied PDFs</span></article><article><b>{verifiedObjectiveCount}</b><span>Objectives fully verified</span></article><article className="missing"><b>5</b><span>Missing source outcomes</span></article></div>
                 <article className="panel coverage-table">
                   <div className="coverage-header"><span>Syllabus area</span><span>Outcomes</span><span>Source coverage</span><span>Verification</span></div>
                   {syllabusAreas.map((area) => (

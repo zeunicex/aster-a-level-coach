@@ -19,6 +19,7 @@ import {
 test("complete 9477 map and 17-PDF pipeline use verified source counts", () => {
   assert.equal(syllabusAreas.reduce((sum, area) => sum + area.outcomes, 0), 101);
   assert.equal(syllabusAreas.reduce((sum, area) => sum + area.sourced, 0), 96);
+  assert.equal(syllabusAreas.reduce((sum, area) => sum + area.verified, 0), 33);
   assert.equal(practicalSkills.length, 4);
   assert.equal(pdfPipeline.length, 17);
   assert.equal(pdfPipeline.reduce((sum, file) => sum + file.pages, 0), 852);
