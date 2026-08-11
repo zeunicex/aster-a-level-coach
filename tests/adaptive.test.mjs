@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evidenceConfidence, evidenceDelta, pickNextQuestion } from "../lib/adaptive.mjs";
+import { evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, pickNextQuestion } from "../lib/adaptive.mjs";
 
 test("weights independent, confident answers more than hinted or uncertain answers", () => {
   assert.equal(evidenceDelta({ correct: true, confidence: "High", difficulty: 2 }), 4);
   assert.equal(evidenceDelta({ correct: true, confidence: "Low", usedHint: true, difficulty: 2 }), 1);
   assert.equal(evidenceDelta({ correct: false, confidence: "High", difficulty: 3 }), -3);
+});
+
+test("uses partial marks without pretending a response is fully secure", () => {
+  assert.equal(evidenceDeltaFromMarks({ awardedMarks: 3, totalMarks: 4, confidence: "Medium", difficulty: 3 }), 4);
+  assert.equal(evidenceDeltaFromMarks({ awardedMarks: 2, totalMarks: 4, confidence: "Medium", difficulty: 3 }), 0);
+  assert.equal(evidenceDeltaFromMarks({ awardedMarks: 1, totalMarks: 4, confidence: "High", difficulty: 3 }), -3);
 });
 
 test("keeps mastery confidence separate from the mastery score", () => {
@@ -25,4 +31,24 @@ test("follows a wrong answer with another question on the same objective", () =>
     { code: "4.1", score: 55, confidence: "Low" },
   ];
   assert.equal(pickNextQuestion({ questions, seenIds: ["a"], mastery, lastResult: { code: "5.2", correct: false } }).id, "b");
+});
+
+test("changes format when retesting the same objective after an error", () => {
+  const questions = [
+    { id: "a", code: "3(c)", difficulty: 2, format: "mcq" },
+    { id: "b", code: "3(c)", difficulty: 2, format: "structured" },
+    { id: "c", code: "3(c)", difficulty: 3, format: "mcq" },
+  ];
+  const mastery = [{ code: "3(c)", score: 50, confidence: "Low" }];
+  assert.equal(pickNextQuestion({ questions, seenIds: ["a"], mastery, lastResult: { code: "3(c)", correct: false, format: "mcq" } }).id, "b");
+});
+
+test("adds format variety within an adaptive session", () => {
+  const questions = [
+    { id: "a", code: "3(c)", difficulty: 2, format: "mcq" },
+    { id: "b", code: "3(d)", difficulty: 3, format: "mcq" },
+    { id: "c", code: "3(d)", difficulty: 2, format: "data" },
+  ];
+  const mastery = [{ code: "3(c)", score: 50, confidence: "Low" }, { code: "3(d)", score: 50, confidence: "Low" }];
+  assert.equal(pickNextQuestion({ questions, seenIds: ["a"], mastery }).id, "c");
 });

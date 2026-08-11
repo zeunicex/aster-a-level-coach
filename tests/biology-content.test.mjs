@@ -25,8 +25,8 @@ test("complete 9477 map and 17-PDF pipeline use verified source counts", () => {
 test("Enzymes and Cellular Transport are continuous verified packs", () => {
   assert.equal(enzymeQuestions.length, 12);
   assert.equal(transportQuestions.length, 12);
-  assert.equal(verifiedBiologyQuestions.length, 72);
-  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 72);
+  assert.equal(verifiedBiologyQuestions.length, 96);
+  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 96);
 
   for (const code of ["1(g)", "1(h)", "1(i)", "1(j)", "1(k)", "1(l)", "1(p)", "1(q)", "1(r)", "1(s)"]) {
     assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 3, code);
@@ -40,15 +40,21 @@ test("Enzymes and Cellular Transport are continuous verified packs", () => {
 });
 
 test("Photosynthesis and Cellular Respiration verify the sourced energy outcomes", () => {
-  assert.equal(photosynthesisQuestions.length, 18);
-  assert.equal(respirationQuestions.length, 18);
+  assert.equal(photosynthesisQuestions.length, 30);
+  assert.equal(respirationQuestions.length, 30);
   for (const code of ["3(a)", "3(b)", "3(c)", "3(d)", "3(e)", "3(f)", "3(g)", "3(h)", "3(i)", "3(j)", "3(l)"]) {
-    assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 3, code);
+    assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 5, code);
   }
   assert.equal(verifiedBiologyQuestions.some((question) => question.code === "3(k)"), false);
   for (const question of [...photosynthesisQuestions, ...respirationQuestions]) {
     assert.ok(existsSync(`public${question.sourceImage}`), question.sourceImage);
-    assert.ok(question.answer >= 0 && question.answer < question.options.length);
+    if (question.markPoints) {
+      assert.equal(question.markPoints.length, question.marks, question.id);
+      assert.ok(question.modelAnswer, question.id);
+    } else {
+      assert.ok(question.answer >= 0 && question.answer < question.options.length, question.id);
+    }
     assert.match(question.source, /PDF pp?\./);
   }
+  assert.deepEqual(new Set([...photosynthesisQuestions, ...respirationQuestions].map((question) => question.format ?? "mcq")), new Set(["mcq", "image", "structured", "data", "sequence", "practical"]));
 });

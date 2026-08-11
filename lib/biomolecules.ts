@@ -7,8 +7,12 @@ export type BiomoleculeQuestion = {
   skill: "Knowledge" | "Application" | "Image" | "Exam technique";
   difficulty: 1 | 2 | 3;
   prompt: string;
-  options: string[];
-  answer: number;
+  format?: "mcq" | "image" | "sequence" | "data" | "structured" | "practical";
+  options?: string[];
+  answer?: number;
+  data?: { headers: string[]; rows: string[][] };
+  markPoints?: string[];
+  modelAnswer?: string;
   hint: string;
   misconception: string;
   explanation: string;

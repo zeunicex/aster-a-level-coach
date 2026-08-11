@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { evidenceConfidence, evidenceDelta, pickNextQuestion } from "@/lib/adaptive.mjs";
+import { evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, pickNextQuestion } from "@/lib/adaptive.mjs";
 import { pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions } from "@/lib/biology-content";
 
 type Subject = "Biology" | "Chemistry";
@@ -9,6 +9,7 @@ type View = "today" | "map" | "pipeline" | "library" | "progress";
 type Confidence = "Low" | "Medium" | "High";
 type Skill = "Knowledge" | "Application" | "Image" | "Exam technique";
 type SessionKind = "quick" | "practice" | "diagnostic";
+type QuestionFormat = "mcq" | "image" | "sequence" | "data" | "structured" | "practical";
 type MasteryItem = {
   code: string;
   topic: string;
@@ -30,8 +31,12 @@ type Question = {
   skill: Skill;
   difficulty: 1 | 2 | 3;
   prompt: string;
-  options: string[];
-  answer: number;
+  format?: QuestionFormat;
+  options?: string[];
+  answer?: number;
+  data?: { headers: string[]; rows: string[][] };
+  markPoints?: string[];
+  modelAnswer?: string;
   hint: string;
   misconception: string;
   explanation: string;
@@ -41,6 +46,14 @@ type Question = {
   sourcePage?: number;
 };
 type FileItem = { id?: string; name: string; meta: string; tag: string; status?: string };
+const formatLabels: Record<QuestionFormat, string> = {
+  mcq: "Multiple choice",
+  image: "Image interpretation",
+  sequence: "Process sequence",
+  data: "Data response",
+  structured: "Structured response",
+  practical: "Practical planning",
+};
 
 const initialMastery: Record<Subject, MasteryItem[]> = {
   Biology: [
@@ -419,13 +432,16 @@ export default function Home() {
   const [sessionTarget, setSessionTarget] = useState(5);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [writtenAnswer, setWrittenAnswer] = useState("");
+  const [awardedPoints, setAwardedPoints] = useState<number[]>([]);
+  const [marked, setMarked] = useState(false);
   const [answerConfidence, setAnswerConfidence] = useState<Confidence | null>(null);
   const [usedHint, setUsedHint] = useState(false);
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState(0);
   const [sessionDelta, setSessionDelta] = useState(0);
   const [evidenceAdded, setEvidenceAdded] = useState(0);
-  const [lastResult, setLastResult] = useState<{ code: string; correct: boolean } | null>(null);
+  const [lastResult, setLastResult] = useState<{ code: string; correct: boolean; format: QuestionFormat } | null>(null);
   const [lastEvidence, setLastEvidence] = useState<{ delta: number; label: string; confidence: Confidence } | null>(null);
   const [complete, setComplete] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -435,8 +451,8 @@ export default function Home() {
     { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
     { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
     { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-    { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
-    { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
+    { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -444,6 +460,9 @@ export default function Home() {
   const average = Math.round(currentMastery.reduce((sum, item) => sum + item.score, 0) / currentMastery.length);
   const totalEvidence = currentMastery.reduce((sum, item) => sum + item.evidence, 0);
   const activeQuestion = sessionQuestions[questionIndex] ?? questions[subject][0];
+  const activeFormat = activeQuestion.format ?? "mcq";
+  const isWritten = Boolean(activeQuestion.markPoints?.length);
+  const preferredFormats = mode === "Exam-style" ? ["structured", "practical", "data"] : mode === "Image-heavy" ? ["image", "data"] : [];
 
   const weakTopic = useMemo(() => [...currentMastery].sort((a, b) => a.score - b.score)[0], [currentMastery]);
 
@@ -459,8 +478,8 @@ export default function Home() {
         { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-        { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
-        { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
+        { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
       ] : [
         { name: "H2 Chemistry course materials", meta: "Awaiting source pack", tag: "Source pack", status: "Needed" },
@@ -482,15 +501,17 @@ export default function Home() {
   function startSession(kind: SessionKind = "practice", focusCode?: string) {
     const target = kind === "diagnostic" ? 8 : kind === "quick" ? 6 : 5;
     const pool = subject === "Biology" ? verifiedBiologyQuestions : questions[subject];
-    const first = focusCode
-      ? pool.find((question) => question.code === focusCode) ?? pool[0]
-      : pickNextQuestion({ questions: pool, seenIds: [], mastery: currentMastery });
+    const focusedPool = focusCode ? pool.filter((question) => question.code === focusCode) : pool;
+    const first = pickNextQuestion({ questions: focusedPool, seenIds: [], mastery: currentMastery, preferredFormats });
     setSessionKind(kind);
     setSessionTarget(target);
     setSessionQuestions(first ? [first] : []);
     setSession(true);
     setQuestionIndex(0);
     setSelected(null);
+    setWrittenAnswer("");
+    setAwardedPoints([]);
+    setMarked(false);
     setAnswerConfidence(null);
     setUsedHint(false);
     setChecked(false);
@@ -502,18 +523,22 @@ export default function Home() {
     setComplete(false);
   }
 
-  async function checkAnswer() {
-    if (selected === null || answerConfidence === null) return;
+  async function recordAnswer(selectedAnswer?: number, awardedMarks?: number) {
+    if (answerConfidence === null) return;
     setSaving(true);
-    let correct = selected === activeQuestion.answer;
-    let delta = evidenceDelta({ correct, confidence: answerConfidence, usedHint, difficulty: activeQuestion.difficulty });
+    let correct = isWritten
+      ? Number(awardedMarks) / activeQuestion.marks >= 0.75
+      : selectedAnswer === activeQuestion.answer;
+    let delta = isWritten
+      ? evidenceDeltaFromMarks({ awardedMarks: Number(awardedMarks), totalMarks: activeQuestion.marks, confidence: answerConfidence, usedHint, difficulty: activeQuestion.difficulty })
+      : evidenceDelta({ correct, confidence: answerConfidence, usedHint, difficulty: activeQuestion.difficulty });
     let serverMastery: Partial<MasteryItem> | null = null;
     if (subject === "Biology" && activeQuestion.sourceImage) {
       try {
         const response = await fetch("/api/learning", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ questionId: activeQuestion.id, selected, confidence: answerConfidence, usedHint }),
+          body: JSON.stringify({ questionId: activeQuestion.id, selected: selectedAnswer, awardedMarks, confidence: answerConfidence, usedHint }),
         });
         if (!response.ok) throw new Error("Save failed");
         const result = await response.json();
@@ -549,12 +574,28 @@ export default function Home() {
       }),
     }));
     setChecked(true);
-    setLastResult({ code: activeQuestion.code, correct });
+    setMarked(true);
+    setLastResult({ code: activeQuestion.code, correct, format: activeFormat });
     setLastEvidence({ delta, label: activeQuestion.skill, confidence: answerConfidence });
     setSessionDelta((value) => value + delta);
     setEvidenceAdded((value) => value + 1);
     if (correct) setScore((value) => value + 1);
     setSaving(false);
+  }
+
+  async function checkAnswer() {
+    if (answerConfidence === null) return;
+    if (isWritten) {
+      if (!writtenAnswer.trim()) return;
+      setChecked(true);
+      return;
+    }
+    if (selected === null) return;
+    await recordAnswer(selected);
+  }
+
+  async function saveSelfMark() {
+    await recordAnswer(undefined, awardedPoints.length);
   }
 
   function nextQuestion() {
@@ -567,6 +608,7 @@ export default function Home() {
       seenIds: sessionQuestions.map((question) => question.id),
       mastery: currentMastery,
       lastResult,
+      preferredFormats,
     });
     if (!next) {
       setComplete(true);
@@ -575,6 +617,9 @@ export default function Home() {
     setSessionQuestions((current) => [...current, next]);
     setQuestionIndex((value) => value + 1);
     setSelected(null);
+    setWrittenAnswer("");
+    setAwardedPoints([]);
+    setMarked(false);
     setAnswerConfidence(null);
     setUsedHint(false);
     setChecked(false);
@@ -677,27 +722,39 @@ export default function Home() {
                 <article className="question-card">
                   <div className="question-meta"><span>{sessionKind === "quick" ? "Quick Check" : sessionKind === "diagnostic" ? "Full Diagnostic" : activeQuestion.eyebrow}</span><b>{activeQuestion.marks} {activeQuestion.marks === 1 ? "mark" : "marks"}</b></div>
                   <p className="objective-tag">Syllabus {activeQuestion.objective}</p>
-                  <div className="question-signals"><span>{activeQuestion.skill}</span><span>Difficulty {activeQuestion.difficulty}/3</span><span>Evidence point {evidenceAdded + 1}</span></div>
+                  <div className="question-signals"><span>{formatLabels[activeFormat]}</span><span>{activeQuestion.skill}</span><span>Difficulty {activeQuestion.difficulty}/3</span><span>Evidence point {evidenceAdded + 1}</span></div>
                   <h1>{activeQuestion.prompt}</h1>
                   {activeQuestion.visual && <SourceVisual kind={activeQuestion.visual} />}
-                  {activeQuestion.sourceImage && activeQuestion.skill === "Image" && (
+                  {activeQuestion.sourceImage && (activeQuestion.skill === "Image" || activeFormat === "image") && (
                     <figure className="source-figure">
                       <img src={activeQuestion.sourceImage} alt={`Source page ${activeQuestion.sourcePage} for this Biology question`} />
                       <figcaption>Real textbook figure · inspect the full verified page in the source panel</figcaption>
                     </figure>
                   )}
-                  <div className="options">
-                    {activeQuestion.options.map((option, index) => {
-                      const state = checked
-                        ? index === activeQuestion.answer ? "correct" : selected === index ? "wrong" : ""
-                        : selected === index ? "selected" : "";
-                      return (
-                        <button key={option} className={`option ${state}`} onClick={() => !checked && setSelected(index)}>
-                          <span>{String.fromCharCode(65 + index)}</span><p>{option}</p>{state === "correct" && <b>✓</b>}{state === "wrong" && <b>×</b>}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {activeQuestion.data && <div className="data-table" role="table" aria-label="Question data"><div role="row">{activeQuestion.data.headers.map((cell) => <b role="columnheader" key={cell}>{cell}</b>)}</div>{activeQuestion.data.rows.map((row) => <div role="row" key={row.join("-")}>{row.map((cell) => <span role="cell" key={cell}>{cell}</span>)}</div>)}</div>}
+                  {isWritten ? (
+                    !checked ? <label className="written-response"><span>Your answer</span><textarea value={writtenAnswer} onChange={(event) => setWrittenAnswer(event.target.value)} placeholder={`Write an exam-style response worth ${activeQuestion.marks} marks…`} /></label> : (
+                      <div className="mark-review">
+                        <div><strong>Mark your response</strong><span>Select only the points your answer clearly included.</span></div>
+                        {activeQuestion.markPoints?.map((point, index) => <button key={point} disabled={marked} aria-pressed={awardedPoints.includes(index)} onClick={() => setAwardedPoints((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index])}><i>{awardedPoints.includes(index) ? "✓" : index + 1}</i><span>{point}</span></button>)}
+                        {activeQuestion.modelAnswer && <details><summary>Show model answer</summary><p>{activeQuestion.modelAnswer}</p></details>}
+                        {!marked && <button className="primary-button save-mark" disabled={saving} onClick={saveSelfMark}>{saving ? "Saving evidence…" : `Save ${awardedPoints.length} / ${activeQuestion.marks} marks`}</button>}
+                      </div>
+                    )
+                  ) : (
+                    <div className="options">
+                      {(activeQuestion.options ?? []).map((option, index) => {
+                        const state = checked
+                          ? index === activeQuestion.answer ? "correct" : selected === index ? "wrong" : ""
+                          : selected === index ? "selected" : "";
+                        return (
+                          <button key={option} className={`option ${state}`} onClick={() => !checked && setSelected(index)}>
+                            <span>{activeFormat === "sequence" ? index + 1 : String.fromCharCode(65 + index)}</span><p>{option}</p>{state === "correct" && <b>✓</b>}{state === "wrong" && <b>×</b>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                   {!checked ? (
                     <div className="answer-actions">
                       <div className="hint-row">
@@ -708,14 +765,14 @@ export default function Home() {
                         <span>Before checking, how confident are you?</span>
                         <div>{(["Low", "Medium", "High"] as Confidence[]).map((level) => <button key={level} aria-pressed={answerConfidence === level} onClick={() => setAnswerConfidence(level)}>{level}</button>)}</div>
                       </div>
-                      <button className="primary-button submit" disabled={selected === null || answerConfidence === null || saving} onClick={checkAnswer}>{saving ? "Saving evidence…" : "Check answer"}</button>
+                      <button className="primary-button submit" disabled={(isWritten ? !writtenAnswer.trim() : selected === null) || answerConfidence === null || saving} onClick={checkAnswer}>{saving ? "Saving evidence…" : isWritten ? "Open mark scheme" : "Check answer"}</button>
                     </div>
-                  ) : (
-                    <div className={selected === activeQuestion.answer ? "feedback success" : "feedback retry"}>
-                      <div><span>{selected === activeQuestion.answer ? "✓" : "↗"}</span><strong>{selected === activeQuestion.answer ? "Exactly right" : "This is the key distinction"}</strong></div>
+                  ) : marked && (
+                    <div className={lastResult?.correct ? "feedback success" : "feedback retry"}>
+                      <div><span>{lastResult?.correct ? "✓" : "↗"}</span><strong>{lastResult?.correct ? isWritten ? "Secure response" : "Exactly right" : isWritten ? "Targeted follow-up needed" : "This is the key distinction"}</strong></div>
                       <p>{activeQuestion.explanation}</p>
                       {lastEvidence && <div className="evidence-result"><span>{lastEvidence.delta >= 0 ? `+${lastEvidence.delta}` : lastEvidence.delta}</span><p>{lastEvidence.label} evidence · {lastEvidence.confidence} confidence</p></div>}
-                      <button className="primary-button" onClick={nextQuestion}>{questionIndex + 1 >= sessionTarget ? "See session summary" : selected === activeQuestion.answer ? "Continue adaptive path" : "Try a targeted follow-up"} →</button>
+                      <button className="primary-button" onClick={nextQuestion}>{questionIndex + 1 >= sessionTarget ? "See session summary" : lastResult?.correct ? "Continue adaptive path" : "Try a different format"} →</button>
                     </div>
                   )}
                 </article>
@@ -725,7 +782,7 @@ export default function Home() {
                   {!checked ? <div className="source-locked"><span>⌁</span><strong>Evidence hidden until you answer</strong><p>Commit to your own reasoning first. The relevant textbook page will unlock with the feedback.</p><small>Source verified · Syllabus linked</small></div> : activeQuestion.sourceImage ? <a className="real-page-preview" href={activeQuestion.sourceImage} target="_blank" rel="noreferrer"><img src={activeQuestion.sourceImage} alt={`Verified Biology source page ${activeQuestion.sourcePage}`} /><span>Printed page {activeQuestion.sourcePage} · click to enlarge</span></a> : <div className="page-preview"><span className="page-number">74</span><h4>{subject === "Biology" ? "The fluid mosaic model" : "Dynamic equilibrium"}</h4><p>The arrangement and behaviour described here explains the relationship tested in this question.</p><p className="highlight">Relevant syllabus-linked evidence is highlighted so you can verify every answer.</p><div className="text-lines"><i /><i /><i /><i /></div></div>}
                   <p className="source-name">▤ {activeQuestion.source}</p>
                   {checked && activeQuestion.sourceImage ? <a className="source-link" href={activeQuestion.sourceImage} target="_blank" rel="noreferrer">Open full source page ↗</a> : <span className="source-link">{checked ? "Source citation available" : "Full page unlocks after submission"}</span>}
-                  <div className="evidence-context"><span>Why this question?</span><p>{checked && selected !== activeQuestion.answer ? `You showed a possible ${activeQuestion.misconception.toLowerCase()} gap, so the next question will test the same objective differently.` : `This objective has limited recent evidence. Aster is checking ${activeQuestion.skill.toLowerCase()} before changing its mastery estimate.`}</p></div>
+                  <div className="evidence-context"><span>Why this question?</span><p>{marked && lastResult?.correct === false ? `You showed a possible ${activeQuestion.misconception.toLowerCase()} gap, so the next question will keep the objective but change the format.` : `This objective has limited recent evidence. Aster is checking ${activeQuestion.skill.toLowerCase()} through a ${formatLabels[activeFormat].toLowerCase()} before changing its mastery estimate.`}</p></div>
                 </aside>
               </div>
             ) : (
@@ -758,7 +815,7 @@ export default function Home() {
                 <div className="focus-top"><span>{subject === "Biology" ? "5 VERIFIED BIOLOGY PACKS" : "YOUR NEXT SESSION"}</span><em>Personalised</em></div>
                 <h2>{subject === "Biology" ? "Build mastery from your own Biology notes" : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
                 <p>{subject === "Biology" ? "Five verified packs now form one continuous path from biomolecules to energy transformation. Every answer updates both mastery and the next question." : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
-                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {subject === "Biology" ? "72 verified questions" : "5 evidence points"}</span><span>▧ {subject === "Biology" ? "36 real source pages" : "Live adaptive path"}</span></div>
+                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {subject === "Biology" ? "96 verified questions" : "5 evidence points"}</span><span>▧ {subject === "Biology" ? "6 question formats" : "Live adaptive path"}</span></div>
                 <div className="focus-controls">
                   <div className="segmented" aria-label="Session duration">
                     {[15, 25, 40].map((value) => <button key={value} className={minutes === value ? "active" : ""} onClick={() => setMinutes(value)}>{value}m</button>)}
@@ -834,7 +891,7 @@ export default function Home() {
           <section className="page-content pipeline-page">
             <div className="page-heading"><div><p>Biology content operations</p><h1>{subject === "Biology" ? "17-PDF processing console" : "Chemistry content pipeline"}</h1><span>{subject === "Biology" ? "Every source has been indexed and mapped; verified means its questions and evidence pages are live." : "Add the Chemistry source pack to begin mapping."}</span></div><button className="outline-button" onClick={() => setView("library")}>Manage uploads</button></div>
             {subject === "Biology" ? <>
-              <div className="pipeline-summary"><article><span>Sources</span><b>17</b><small>all text-searchable</small></article><article><span>PDF pages</span><b>852</b><small>indexed</small></article><article><span>Detected figures</span><b>1,866</b><small>available for question design</small></article><article><span>Live packs</span><b>5</b><small>72 verified questions</small></article></div>
+              <div className="pipeline-summary"><article><span>Sources</span><b>17</b><small>all text-searchable</small></article><article><span>PDF pages</span><b>852</b><small>indexed</small></article><article><span>Detected figures</span><b>1,866</b><small>available for question design</small></article><article><span>Live packs</span><b>5</b><small>96 verified questions</small></article></div>
               <article className="pipeline-warning"><span>!</span><div><strong>Two source gaps remain visible</strong><p>Cell Structure outcomes 1(a)–1(d) have no supplied PDF, and Cellular Respiration does not cover investigation outcome 3(k). Aster leaves them unverified instead of inferring evidence.</p></div></article>
               <article className="panel pipeline-table"><div className="pipeline-header"><span>Source</span><span>Size</span><span>9477 mapping</span><span>Status</span></div>{pdfPipeline.map((file) => <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.images} detected figures</small></div></div><p>{file.pages} pages</p><b>{file.mapping}</b><em className={file.status.toLowerCase()}>{file.status === "Verified" ? `✓ Verified · ${file.questions} Q` : "Mapped · QA next"}</em></div>)}</article>
             </> : <article className="panel empty-pipeline"><span>＋</span><h3>No Chemistry source pack yet</h3><p>Upload the coursebook and syllabus to create the same source-to-objective pipeline.</p><button className="primary-button" onClick={() => fileInput.current?.click()}>Upload material</button></article>}

@@ -1,7 +1,7 @@
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getStore } from "@/db/runtime";
 import { verifiedBiologyAnswerKey } from "@/lib/biology-content";
-import { evidenceConfidence, evidenceDelta } from "@/lib/adaptive.mjs";
+import { evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks } from "@/lib/adaptive.mjs";
 
 const seedMastery = {
   Biology: [
@@ -67,11 +67,16 @@ export async function POST(request: Request) {
   const payload = await request.json() as {
     questionId?: string;
     selected?: number;
+    awardedMarks?: number;
     confidence?: "Low" | "Medium" | "High";
     usedHint?: boolean;
   };
   const question = payload.questionId ? verifiedBiologyAnswerKey[payload.questionId] : null;
-  if (!question || !Number.isInteger(payload.selected) || !["Low", "Medium", "High"].includes(payload.confidence ?? "")) {
+  const written = Boolean(question?.markPoints?.length);
+  const validAnswer = written
+    ? Number.isInteger(payload.awardedMarks) && Number(payload.awardedMarks) >= 0 && Number(payload.awardedMarks) <= Number(question?.marks)
+    : Number.isInteger(payload.selected);
+  if (!question || !validAnswer || !["Low", "Medium", "High"].includes(payload.confidence ?? "")) {
     return Response.json({ error: "Invalid verified question attempt" }, { status: 400 });
   }
 
@@ -82,8 +87,10 @@ export async function POST(request: Request) {
   `).bind(userId, question.code).first<Record<string, number | string>>();
   if (!existing) return Response.json({ error: "Mastery objective is not initialized" }, { status: 409 });
 
-  const correct = payload.selected === question.answer;
-  const delta = evidenceDelta({ correct, confidence: payload.confidence, usedHint: Boolean(payload.usedHint), difficulty: question.difficulty });
+  const correct = written ? Number(payload.awardedMarks) / question.marks >= 0.75 : payload.selected === question.answer;
+  const delta = written
+    ? evidenceDeltaFromMarks({ awardedMarks: Number(payload.awardedMarks), totalMarks: question.marks, confidence: payload.confidence, usedHint: Boolean(payload.usedHint), difficulty: question.difficulty })
+    : evidenceDelta({ correct, confidence: payload.confidence, usedHint: Boolean(payload.usedHint), difficulty: question.difficulty });
   const clamp = (value: number) => Math.max(0, Math.min(100, value + delta));
   const evidence = Number(existing.evidence) + 1;
   const skillColumn = question.skill === "Knowledge" ? "knowledge" : question.skill === "Exam technique" ? "exam" : "application";
