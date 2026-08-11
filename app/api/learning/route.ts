@@ -1,6 +1,6 @@
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getStore } from "@/db/runtime";
-import { biomoleculeAnswerKey } from "@/lib/biomolecules";
+import { verifiedBiologyAnswerKey } from "@/lib/biology-content";
 import { evidenceConfidence, evidenceDelta } from "@/lib/adaptive.mjs";
 
 const seedMastery = {
@@ -8,10 +8,13 @@ const seedMastery = {
     ["1(g)", "Biomolecule monomers", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["1(h)", "Biological bonds", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
     ["1(i)", "Structure and function", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1.2", "Cell structure", 76, 11, "High", 86, 71, 70, "Strong recall", "4 days"],
-    ["4.1", "Cell membranes", 63, 6, "Medium", 76, 54, 59, "Application is uneven", "Today"],
-    ["5.2", "Enzyme kinetics", 43, 2, "Low", 61, 35, 34, "Graphs need work", "Today"],
-    ["12.1", "Photosynthesis", 54, 3, "Low", 67, 51, 44, "Explain questions", "Tomorrow"],
+    ["1(j)", "Fluid mosaic membrane", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(k)", "Membrane functions", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(l)", "Membrane transport", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(p)", "Enzyme action", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(q)", "Enzyme investigations", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(r)", "Inhibitor binding", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
+    ["1(s)", "Inhibitor effects", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
   ],
   Chemistry: [
     ["2.1", "Atomic structure", 82, 12, "High", 91, 79, 76, "Secure", "6 days"],
@@ -41,10 +44,12 @@ export async function GET(request: Request) {
     SELECT code, topic, score, evidence, confidence, knowledge, application, exam, note, due
     FROM mastery WHERE user_id = ? AND subject = ? ORDER BY code
   `).bind(userId, subject).all();
+  const activeCodes = new Set<string>(seedMastery[subject].map((item) => String(item[0])));
+  const activeMastery = (mastery.results as { code: string }[]).filter((item) => activeCodes.has(item.code));
   const totals = await db.prepare("SELECT COUNT(*) AS count FROM attempts WHERE user_id = ? AND subject = ?")
     .bind(userId, subject).first<{ count: number }>();
 
-  return Response.json({ mastery: mastery.results, attempts: totals?.count ?? 0, saved: true });
+  return Response.json({ mastery: activeMastery, attempts: totals?.count ?? 0, saved: true });
 }
 
 export async function POST(request: Request) {
@@ -54,7 +59,7 @@ export async function POST(request: Request) {
     confidence?: "Low" | "Medium" | "High";
     usedHint?: boolean;
   };
-  const question = payload.questionId ? biomoleculeAnswerKey[payload.questionId] : null;
+  const question = payload.questionId ? verifiedBiologyAnswerKey[payload.questionId] : null;
   if (!question || !Number.isInteger(payload.selected) || !["Low", "Medium", "High"].includes(payload.confidence ?? "")) {
     return Response.json({ error: "Invalid verified question attempt" }, { status: 400 });
   }

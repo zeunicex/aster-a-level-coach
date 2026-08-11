@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { evidenceConfidence, evidenceDelta, pickNextQuestion } from "@/lib/adaptive.mjs";
-import { biomoleculeQuestions } from "@/lib/biomolecules";
+import { pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions } from "@/lib/biology-content";
 
 type Subject = "Biology" | "Chemistry";
-type View = "today" | "map" | "library" | "progress";
+type View = "today" | "map" | "pipeline" | "library" | "progress";
 type Confidence = "Low" | "Medium" | "High";
 type Skill = "Knowledge" | "Application" | "Image" | "Exam technique";
 type SessionKind = "quick" | "practice" | "diagnostic";
@@ -47,10 +47,13 @@ const initialMastery: Record<Subject, MasteryItem[]> = {
     { code: "1(g)", topic: "Biomolecule monomers", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(h)", topic: "Biological bonds", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(i)", topic: "Structure and function", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1.2", topic: "Cell structure", score: 76, note: "Strong recall", due: "4 days", evidence: 11, confidence: "High", knowledge: 86, application: 71, exam: 70 },
-    { code: "4.1", topic: "Cell membranes", score: 63, note: "Application is uneven", due: "Today", evidence: 6, confidence: "Medium", knowledge: 76, application: 54, exam: 59 },
-    { code: "5.2", topic: "Enzyme kinetics", score: 43, note: "Graphs need work", due: "Today", evidence: 2, confidence: "Low", knowledge: 61, application: 35, exam: 34 },
-    { code: "12.1", topic: "Photosynthesis", score: 54, note: "Explain questions", due: "Tomorrow", evidence: 3, confidence: "Low", knowledge: 67, application: 51, exam: 44 },
+    { code: "1(j)", topic: "Fluid mosaic membrane", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(k)", topic: "Membrane functions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(l)", topic: "Membrane transport", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(p)", topic: "Enzyme action", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(q)", topic: "Enzyme investigations", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(r)", topic: "Inhibitor binding", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "1(s)", topic: "Inhibitor effects", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
   ],
   Chemistry: [
     { code: "2.1", topic: "Atomic structure", score: 82, note: "Secure", due: "6 days", evidence: 12, confidence: "High", knowledge: 91, application: 79, exam: 76 },
@@ -62,7 +65,7 @@ const initialMastery: Record<Subject, MasteryItem[]> = {
 
 const questions: Record<Subject, Question[]> = {
   Biology: [
-    ...biomoleculeQuestions,
+    ...verifiedBiologyQuestions,
     {
       id: "bio-membrane-fluidity",
       code: "4.1",
@@ -359,6 +362,7 @@ const questions: Record<Subject, Question[]> = {
 const nav: { id: View; label: string; icon: string }[] = [
   { id: "today", label: "Today", icon: "⌂" },
   { id: "map", label: "Syllabus map", icon: "◎" },
+  { id: "pipeline", label: "Content pipeline", icon: "◫" },
   { id: "library", label: "My materials", icon: "▤" },
   { id: "progress", label: "Progress", icon: "↗" },
 ];
@@ -418,8 +422,9 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState<FileItem[]>([
     { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-    { name: "TMJC H2 Biology notes", meta: "17 modules · 852 pages · Biomolecules complete", tag: "Source pack", status: "Processing" },
-    { name: "9477 H2 Biology syllabus.pdf", meta: "2026 exam pack · active", tag: "Syllabus" },
+    { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+    { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+    { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
   const currentMastery = masteryState[subject];
@@ -439,8 +444,9 @@ export default function Home() {
       setMasteryState((current) => ({ ...current, [subject]: learning.mastery as MasteryItem[] }));
       const base: FileItem[] = subject === "Biology" ? [
         { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-        { name: "TMJC H2 Biology notes", meta: "17 modules · 852 pages · Biomolecules complete", tag: "Source pack", status: "Processing" },
-        { name: "9477 H2 Biology syllabus.pdf", meta: "2026 exam pack · objectives 1(g)–1(i) linked", tag: "Syllabus", status: "Ready" },
+        { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+        { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+        { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
       ] : [
         { name: "H2 Chemistry course materials", meta: "Awaiting source pack", tag: "Source pack", status: "Needed" },
         { name: "9476 H2 Chemistry syllabus.pdf", meta: "2026 exam pack · active", tag: "Syllabus", status: "Ready" },
@@ -460,7 +466,7 @@ export default function Home() {
 
   function startSession(kind: SessionKind = "practice", focusCode?: string) {
     const target = kind === "diagnostic" ? 8 : kind === "quick" ? 6 : 5;
-    const pool = subject === "Biology" ? biomoleculeQuestions : questions[subject];
+    const pool = subject === "Biology" ? verifiedBiologyQuestions : questions[subject];
     const first = focusCode
       ? pool.find((question) => question.code === focusCode) ?? pool[0]
       : pickNextQuestion({ questions: pool, seenIds: [], mastery: currentMastery });
@@ -487,7 +493,7 @@ export default function Home() {
     let correct = selected === activeQuestion.answer;
     let delta = evidenceDelta({ correct, confidence: answerConfidence, usedHint, difficulty: activeQuestion.difficulty });
     let serverMastery: Partial<MasteryItem> | null = null;
-    if (activeQuestion.id.startsWith("bio-biomol")) {
+    if (subject === "Biology" && activeQuestion.sourceImage) {
       try {
         const response = await fetch("/api/learning", {
           method: "POST",
@@ -542,7 +548,7 @@ export default function Home() {
       return;
     }
     const next = pickNextQuestion({
-      questions: subject === "Biology" ? biomoleculeQuestions : questions[subject],
+      questions: subject === "Biology" ? verifiedBiologyQuestions : questions[subject],
       seenIds: sessionQuestions.map((question) => question.id),
       mastery: currentMastery,
       lastResult,
@@ -610,7 +616,7 @@ export default function Home() {
           {nav.map((item) => (
             <button key={item.id} className={view === item.id ? "nav-item active" : "nav-item"} onClick={() => { setView(item.id); setSession(false); }}>
               <span>{item.icon}</span>{item.label}
-              {item.id === "map" && <em>4</em>}
+              {item.id === "pipeline" && subject === "Biology" && <em>17</em>}
             </button>
           ))}
         </nav>
@@ -661,7 +667,7 @@ export default function Home() {
                   {activeQuestion.visual && <SourceVisual kind={activeQuestion.visual} />}
                   {activeQuestion.sourceImage && activeQuestion.skill === "Image" && (
                     <figure className="source-figure">
-                      <img src={activeQuestion.sourceImage} alt={`Source page ${activeQuestion.sourcePage} from the Biomolecules notes`} />
+                      <img src={activeQuestion.sourceImage} alt={`Source page ${activeQuestion.sourcePage} for this Biology question`} />
                       <figcaption>Real textbook figure · inspect the full verified page in the source panel</figcaption>
                     </figure>
                   )}
@@ -701,7 +707,7 @@ export default function Home() {
 
                 <aside className="source-panel">
                   <div className="source-panel-head"><span>Source evidence</span><b>{checked ? "Unlocked" : "Verified"}</b></div>
-                  {!checked ? <div className="source-locked"><span>⌁</span><strong>Evidence hidden until you answer</strong><p>Commit to your own reasoning first. The relevant textbook page will unlock with the feedback.</p><small>Source verified · Syllabus linked</small></div> : activeQuestion.sourceImage ? <a className="real-page-preview" href={activeQuestion.sourceImage} target="_blank" rel="noreferrer"><img src={activeQuestion.sourceImage} alt={`Verified Biomolecules source page ${activeQuestion.sourcePage}`} /><span>Printed page {activeQuestion.sourcePage} · click to enlarge</span></a> : <div className="page-preview"><span className="page-number">74</span><h4>{subject === "Biology" ? "The fluid mosaic model" : "Dynamic equilibrium"}</h4><p>The arrangement and behaviour described here explains the relationship tested in this question.</p><p className="highlight">Relevant syllabus-linked evidence is highlighted so you can verify every answer.</p><div className="text-lines"><i /><i /><i /><i /></div></div>}
+                  {!checked ? <div className="source-locked"><span>⌁</span><strong>Evidence hidden until you answer</strong><p>Commit to your own reasoning first. The relevant textbook page will unlock with the feedback.</p><small>Source verified · Syllabus linked</small></div> : activeQuestion.sourceImage ? <a className="real-page-preview" href={activeQuestion.sourceImage} target="_blank" rel="noreferrer"><img src={activeQuestion.sourceImage} alt={`Verified Biology source page ${activeQuestion.sourcePage}`} /><span>Printed page {activeQuestion.sourcePage} · click to enlarge</span></a> : <div className="page-preview"><span className="page-number">74</span><h4>{subject === "Biology" ? "The fluid mosaic model" : "Dynamic equilibrium"}</h4><p>The arrangement and behaviour described here explains the relationship tested in this question.</p><p className="highlight">Relevant syllabus-linked evidence is highlighted so you can verify every answer.</p><div className="text-lines"><i /><i /><i /><i /></div></div>}
                   <p className="source-name">▤ {activeQuestion.source}</p>
                   {checked && activeQuestion.sourceImage ? <a className="source-link" href={activeQuestion.sourceImage} target="_blank" rel="noreferrer">Open full source page ↗</a> : <span className="source-link">{checked ? "Source citation available" : "Full page unlocks after submission"}</span>}
                   <div className="evidence-context"><span>Why this question?</span><p>{checked && selected !== activeQuestion.answer ? `You showed a possible ${activeQuestion.misconception.toLowerCase()} gap, so the next question will test the same objective differently.` : `This objective has limited recent evidence. Aster is checking ${activeQuestion.skill.toLowerCase()} before changing its mastery estimate.`}</p></div>
@@ -734,10 +740,10 @@ export default function Home() {
 
             <div className="hero-grid">
               <article className="focus-card">
-                <div className="focus-top"><span>{subject === "Biology" ? "VERIFIED BIOMOLECULES PACK" : "YOUR NEXT SESSION"}</span><em>Personalised</em></div>
-                <h2>{subject === "Biology" ? "Master biomolecules from your own notes" : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
-                <p>{subject === "Biology" ? "A complete source-linked path across monomers, biological bonds and structure–function reasoning. Every answer updates the next question." : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
-                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {subject === "Biology" ? "12 verified questions" : "5 evidence points"}</span><span>▧ {subject === "Biology" ? "9 real source figures" : "Live adaptive path"}</span></div>
+                <div className="focus-top"><span>{subject === "Biology" ? "3 VERIFIED BIOLOGY PACKS" : "YOUR NEXT SESSION"}</span><em>Personalised</em></div>
+                <h2>{subject === "Biology" ? "Build mastery from your own Biology notes" : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
+                <p>{subject === "Biology" ? "Biomolecules, enzymes and cellular transport now form one continuous adaptive path. Every answer updates both mastery and the next question." : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
+                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {subject === "Biology" ? "36 verified questions" : "5 evidence points"}</span><span>▧ {subject === "Biology" ? "21 real source pages" : "Live adaptive path"}</span></div>
                 <div className="focus-controls">
                   <div className="segmented" aria-label="Session duration">
                     {[15, 25, 40].map((value) => <button key={value} className={minutes === value ? "active" : ""} onClick={() => setMinutes(value)}>{value}m</button>)}
@@ -781,14 +787,42 @@ export default function Home() {
           </section>
         ) : view === "map" ? (
           <section className="page-content map-page">
-            <div className="page-heading"><div><p>Singapore–Cambridge · H2 {subject === "Biology" ? "9477" : "9476"} · 2026</p><h1>Syllabus mastery map</h1><span>Mastery and evidence confidence are separate, so an early estimate never looks final.</span></div><button className="primary-button" onClick={() => startSession("practice")}>Practise weak areas →</button></div>
-            <div className="map-summary"><div><Ring value={average} size={86} /><span><b>{average}%</b><small>Current mastery estimate</small></span></div><div><b>{totalEvidence}</b><small>Evidence points</small></div><div><b>{currentMastery.filter((item) => item.confidence === "Low").length}</b><small>Low-confidence estimates</small></div><div><b>{currentMastery.filter((item) => item.due === "Today").length}</b><small>Due today</small></div></div>
-            <article className="panel syllabus-table">
-              <div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>
-              {currentMastery.map((item) => (
-                <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={item.due === "Today" ? "due" : ""}>{item.due}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>
-              ))}
-            </article>
+            <div className="page-heading"><div><p>Singapore–Cambridge · H2 {subject === "Biology" ? "9477" : "9476"} · 2026</p><h1>{subject === "Biology" ? "Complete syllabus map" : "Syllabus mastery map"}</h1><span>{subject === "Biology" ? "Coverage tells you what the sources contain; mastery tells you what you can reliably do." : "Mastery and evidence confidence are separate, so an early estimate never looks final."}</span></div><button className="primary-button" onClick={() => startSession("practice")}>Practise weak areas →</button></div>
+            {subject === "Biology" ? (
+              <>
+                <div className="coverage-summary"><article><b>101</b><span>Content outcomes mapped</span></article><article><b>97</b><span>Covered by supplied PDFs</span></article><article><b>10</b><span>Objectives fully verified</span></article><article className="missing"><b>4</b><span>Missing source outcomes</span></article></div>
+                <article className="panel coverage-table">
+                  <div className="coverage-header"><span>Syllabus area</span><span>Outcomes</span><span>Source coverage</span><span>Verification</span></div>
+                  {syllabusAreas.map((area) => (
+                    <div className="coverage-row" key={area.code}>
+                      <div><small>{area.code} · {area.range}</small><strong>{area.title}</strong><p>{area.note}</p></div>
+                      <b>{area.outcomes}</b>
+                      <div className="coverage-meter"><span><i style={{ width: `${Math.round((area.sourced / area.outcomes) * 100)}%` }} /></span><small>{area.sourced}/{area.outcomes} sourced</small></div>
+                      <em className={area.verified ? "verified" : "mapped"}>{area.verified ? `${area.verified} verified` : area.status}</em>
+                    </div>
+                  ))}
+                </article>
+                <article className="panel practical-panel"><div className="panel-heading"><div><h3>Practical skills</h3><p>Paper 4 skills tracked alongside content outcomes</p></div><b>4 areas</b></div><div className="practical-grid">{practicalSkills.map((skill) => <div key={skill.code}><b>{skill.code}</b><span>{skill.title}</span></div>)}</div></article>
+                <div className="section-label"><div><h3>Your verified-objective mastery</h3><p>These estimates update after every answer.</p></div><span>{totalEvidence} evidence points</span></div>
+                <article className="panel syllabus-table">
+                  <div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>
+                  {currentMastery.map((item) => (
+                    <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={item.due === "Today" ? "due" : ""}>{item.due}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>
+                  ))}
+                </article>
+              </>
+            ) : (
+              <><div className="map-summary"><div><Ring value={average} size={86} /><span><b>{average}%</b><small>Current mastery estimate</small></span></div><div><b>{totalEvidence}</b><small>Evidence points</small></div><div><b>{currentMastery.filter((item) => item.confidence === "Low").length}</b><small>Low-confidence estimates</small></div><div><b>{currentMastery.filter((item) => item.due === "Today").length}</b><small>Due today</small></div></div><article className="panel syllabus-table"><div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>{currentMastery.map((item) => <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={item.due === "Today" ? "due" : ""}>{item.due}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>)}</article></>
+            )}
+          </section>
+        ) : view === "pipeline" ? (
+          <section className="page-content pipeline-page">
+            <div className="page-heading"><div><p>Biology content operations</p><h1>{subject === "Biology" ? "17-PDF processing console" : "Chemistry content pipeline"}</h1><span>{subject === "Biology" ? "Every source has been indexed and mapped; verified means its questions and evidence pages are live." : "Add the Chemistry source pack to begin mapping."}</span></div><button className="outline-button" onClick={() => setView("library")}>Manage uploads</button></div>
+            {subject === "Biology" ? <>
+              <div className="pipeline-summary"><article><span>Sources</span><b>17</b><small>all text-searchable</small></article><article><span>PDF pages</span><b>852</b><small>indexed</small></article><article><span>Detected figures</span><b>1,866</b><small>available for question design</small></article><article><span>Live packs</span><b>3</b><small>36 verified questions</small></article></div>
+              <article className="pipeline-warning"><span>!</span><div><strong>Cell Structure source still needed</strong><p>The supplied sequence begins with Biomolecules, so official outcomes 1(a)–1(d) remain visibly marked as missing instead of being inferred.</p></div></article>
+              <article className="panel pipeline-table"><div className="pipeline-header"><span>Source</span><span>Size</span><span>9477 mapping</span><span>Status</span></div>{pdfPipeline.map((file) => <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.images} detected figures</small></div></div><p>{file.pages} pages</p><b>{file.mapping}</b><em className={file.status.toLowerCase()}>{file.status === "Verified" ? `✓ Verified · ${file.questions} Q` : "Mapped · QA next"}</em></div>)}</article>
+            </> : <article className="panel empty-pipeline"><span>＋</span><h3>No Chemistry source pack yet</h3><p>Upload the coursebook and syllabus to create the same source-to-objective pipeline.</p><button className="primary-button" onClick={() => fileInput.current?.click()}>Upload material</button></article>}
           </section>
         ) : view === "library" ? (
           <section className="page-content library-page">
@@ -797,7 +831,7 @@ export default function Home() {
             <div className="files-grid">
               {files.map((file, index) => <article className="file-card" key={file.id ?? `${file.name}-${index}`}><div className="pdf-icon">PDF</div><div><span>{file.tag}</span><strong>{file.name}</strong><small>{file.meta}</small></div><em>{file.status === "Error" ? "Retry" : file.status === "Processing" ? "Mapping" : file.status === "Needed" ? "Needed" : "✓ Ready"}</em>{file.id ? <button aria-label={`Delete ${file.name}`} onClick={() => removeFile(file)}>×</button> : <span />}</article>)}
             </div>
-            <article className="panel mapping-panel"><div className="panel-heading"><div><h3>Source alignment</h3><p>Coverage of the active {subject} syllabus</p></div><b>{subject === "Biology" ? "Biomolecules verified" : "Source pack needed"}</b></div><div className="coverage-bar"><span style={{ width: subject === "Biology" ? "24%" : "8%" }} /></div><div className="coverage-legend"><span><i className="covered" />9477 objectives 1(g)–1(i) source-linked</span><span><i className="partial" />Remaining Biology modules await validation</span><button onClick={() => setView("map")}>Review mapping →</button></div></article>
+            <article className="panel mapping-panel"><div className="panel-heading"><div><h3>Source alignment</h3><p>Coverage of the active {subject} syllabus</p></div><b>{subject === "Biology" ? "3 packs verified" : "Source pack needed"}</b></div><div className="coverage-bar"><span style={{ width: subject === "Biology" ? "96%" : "8%" }} /></div><div className="coverage-legend"><span><i className="covered" />9477 objectives 1(g)–1(l), 1(p)–1(s) verified</span><span><i className="partial" />1(a)–1(d) source missing</span><button onClick={() => setView(subject === "Biology" ? "pipeline" : "map")}>{subject === "Biology" ? "Open processing console" : "Review mapping"} →</button></div></article>
           </section>
         ) : (
           <section className="page-content progress-page">

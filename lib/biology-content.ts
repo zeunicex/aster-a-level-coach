@@ -1,0 +1,247 @@
+import { biomoleculeQuestions, type BiomoleculeQuestion } from "./biomolecules.ts";
+
+export type BiologyQuestion = BiomoleculeQuestion;
+
+export const syllabusAreas = [
+  { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(u)", outcomes: 21, sourced: 17, verified: 10, status: "In verification", note: "Biomolecules, membranes and enzymes are live. Cell Structure 1(a)–1(d) has no supplied PDF." },
+  { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 0, status: "Mapped", note: "Cell cycle, gene expression, mutations, molecular techniques, regulation and inheritance indexed." },
+  { code: "Core 3", title: "Energy and Equilibrium", range: "3(a)–3(p)", outcomes: 16, sourced: 16, verified: 0, status: "Mapped", note: "Photosynthesis, cellular respiration and cell communication indexed." },
+  { code: "Core 4", title: "Biological Evolution", range: "4(a)–4(n)", outcomes: 14, sourced: 14, verified: 0, status: "Mapped", note: "Evolution source indexed and awaiting question validation." },
+  { code: "Extension A", title: "Infectious Diseases", range: "A(a)–A(k)", outcomes: 11, sourced: 11, verified: 0, status: "Mapped", note: "Viruses, bacteria, immunity and infectious diseases indexed." },
+  { code: "Extension B", title: "Climate Change", range: "B(a)–B(i)", outcomes: 9, sourced: 9, verified: 0, status: "Mapped", note: "Climate change source indexed and awaiting question validation." },
+] as const;
+
+export const practicalSkills = [
+  { code: "Planning", title: "Planning investigations" },
+  { code: "MMO", title: "Manipulation, measurement and observation" },
+  { code: "PDO", title: "Presentation of data and observations" },
+  { code: "ACE", title: "Analysis, conclusions and evaluation" },
+] as const;
+
+export const pdfPipeline = [
+  { order: 2, name: "Biomolecules.pdf", pages: 94, images: 206, mapping: "1(g)–1(i)", status: "Verified", questions: 12 },
+  { order: 3, name: "Enzymes.pdf", pages: 38, images: 71, mapping: "1(p)–1(s)", status: "Verified", questions: 12 },
+  { order: 4, name: "Cellular Transport.pdf", pages: 25, images: 40, mapping: "1(j)–1(l)", status: "Verified", questions: 12 },
+  { order: 5, name: "Photosynthesis.pdf", pages: 40, images: 149, mapping: "Core 3", status: "Mapped", questions: 0 },
+  { order: 6, name: "Cellular Respiration.pdf", pages: 24, images: 64, mapping: "Core 3", status: "Mapped", questions: 0 },
+  { order: 7, name: "The Cell Cycle.pdf", pages: 60, images: 151, mapping: "Core 2", status: "Mapped", questions: 0 },
+  { order: 8, name: "DNA Replication & Gene Expression.pdf", pages: 52, images: 124, mapping: "Core 2", status: "Mapped", questions: 0 },
+  { order: 9, name: "DNA Mutations & Its Consequences.pdf", pages: 39, images: 86, mapping: "Core 2", status: "Mapped", questions: 0 },
+  { order: 10, name: "Molecular Techniques in DNA Analysis.pdf", pages: 27, images: 38, mapping: "Core 2", status: "Mapped", questions: 0 },
+  { order: 11, name: "OCGE in Eukaryotes & Stem Cell.pdf", pages: 96, images: 183, mapping: "Core 1 / Core 2", status: "Mapped", questions: 0 },
+  { order: 12, name: "Viruses.pdf", pages: 42, images: 127, mapping: "1(e)–1(f) / Ext A", status: "Mapped", questions: 0 },
+  { order: 13, name: "OCGE in Prokaryotes (Bacteria).pdf", pages: 44, images: 77, mapping: "Core 2 / Ext A", status: "Mapped", questions: 0 },
+  { order: 14, name: "Inheritance.pdf", pages: 75, images: 161, mapping: "Core 2", status: "Mapped", questions: 0 },
+  { order: 15, name: "Cell Communication.pdf", pages: 30, images: 71, mapping: "Core 3", status: "Mapped", questions: 0 },
+  { order: 16, name: "Biological Evolution.pdf", pages: 64, images: 184, mapping: "Core 4", status: "Mapped", questions: 0 },
+  { order: 17, name: "Immunity & Infectious Diseases.pdf", pages: 51, images: 87, mapping: "Extension A", status: "Mapped", questions: 0 },
+  { order: 18, name: "Climate Change.pdf", pages: 51, images: 47, mapping: "Extension B", status: "Mapped", questions: 0 },
+] as const;
+
+export const enzymeQuestions: BiologyQuestion[] = [
+  {
+    id: "bio-enzyme-active-site", code: "1(p)", eyebrow: "Verified source · mechanism", objective: "1(p) Enzyme mode of action", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "Which event directly explains how an enzyme lowers the activation energy of a reaction?",
+    options: ["The substrate permanently changes the enzyme's primary structure", "Catalytic R groups position and weaken specific bonds in the substrate", "The enzyme raises the temperature around the substrate", "The active site supplies ATP to every reaction"], answer: 1,
+    hint: "Focus on what happens to substrate bonds inside the active site.", misconception: "How active-site residues catalyse reactions",
+    explanation: "Catalytic R groups orient the substrate and interact with its bonds, weakening them and providing a lower-activation-energy pathway.",
+    source: "Enzymes.pdf · PDF p.8 · printed p.86", sourceImage: "/materials/enzymes/page-8.jpg", sourcePage: 86,
+  },
+  {
+    id: "bio-enzyme-induced-fit", code: "1(p)", eyebrow: "Verified source · compare models", objective: "1(p) Enzyme mode of action", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "What distinguishes the induced-fit hypothesis from the lock-and-key hypothesis?",
+    options: ["Only induced fit involves an active site", "In induced fit, substrate binding causes the active site to change shape", "Only lock and key forms an enzyme–substrate complex", "In induced fit, the enzyme is consumed"], answer: 1,
+    hint: "Ask whether the active site is completely rigid before binding.", misconception: "Rigid versus flexible active sites",
+    explanation: "The induced-fit model proposes that initial substrate binding changes the enzyme's conformation so the active site becomes more complementary and catalytically effective.",
+    source: "Enzymes.pdf · PDF p.8 · printed p.86", sourceImage: "/materials/enzymes/page-8.jpg", sourcePage: 86,
+  },
+  {
+    id: "bio-enzyme-specificity", code: "1(p)", eyebrow: "Verified source · unfamiliar substrate", objective: "1(p) Enzyme mode of action", marks: 2, skill: "Exam technique", difficulty: 2,
+    prompt: "A molecule has the same size as an enzyme's substrate but a different arrangement of charged groups. Why may it fail to react?",
+    options: ["It cannot collide with the enzyme", "It may not form the correct ionic and hydrogen-bond interactions at the active site", "All substrates must contain peptide bonds", "It always denatures the enzyme"], answer: 1,
+    hint: "Complementarity includes chemical interactions, not only overall size.", misconception: "Chemical basis of enzyme specificity",
+    explanation: "Correct orientation and complementary R-group interactions are required to stabilise the enzyme–substrate complex and position catalytic groups.",
+    source: "Enzymes.pdf · PDF p.8 · printed p.86", sourceImage: "/materials/enzymes/page-8.jpg", sourcePage: 86,
+  },
+  {
+    id: "bio-enzyme-substrate-graph", code: "1(q)", eyebrow: "Verified source · graph reasoning", objective: "1(q) Investigating enzyme activity", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why does reaction rate plateau as substrate concentration continues to increase?",
+    options: ["Substrate molecules stop moving", "All enzyme active sites are occupied, so enzyme concentration becomes limiting", "The substrate always denatures the enzyme", "The activation energy becomes zero"], answer: 1,
+    hint: "Identify what is fully occupied at the plateau.", misconception: "Cause of enzyme saturation",
+    explanation: "At high substrate concentration, active sites are saturated. Extra substrate must wait for an active site, so Vmax is limited by enzyme concentration.",
+    source: "Enzymes.pdf · PDF p.19 · printed p.97", sourceImage: "/materials/enzymes/page-19.jpg", sourcePage: 97,
+  },
+  {
+    id: "bio-enzyme-ph-control", code: "1(q)", eyebrow: "Verified source · experimental design", objective: "1(q) Investigating enzyme activity", marks: 2, skill: "Exam technique", difficulty: 2,
+    prompt: "When investigating the effect of pH on enzyme activity, which set of variables should be kept constant?",
+    options: ["Substrate concentration, enzyme concentration and temperature", "pH, product concentration and time", "Only the volume of indicator", "Substrate concentration and pH"], answer: 0,
+    hint: "The independent variable cannot also be controlled.", misconception: "Controls in an enzyme investigation",
+    explanation: "To isolate the effect of pH, substrate concentration, enzyme concentration and temperature should remain constant while pH is varied.",
+    source: "Enzymes.pdf · PDF p.21 · printed p.99", sourceImage: "/materials/enzymes/page-21.jpg", sourcePage: 99,
+  },
+  {
+    id: "bio-enzyme-temperature-shape", code: "1(q)", eyebrow: "Verified source · explain a curve", objective: "1(q) Investigating enzyme activity", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "Why does an enzyme activity curve rise gradually below the optimum but fall steeply above it?",
+    options: ["Warming raises collision frequency, while excessive heat disrupts bonds and active-site shape", "Heat creates more enzyme below the optimum and destroys substrate above it", "Low temperature hydrolyses ATP, while high temperature removes water", "The enzyme changes into a lipid above the optimum"], answer: 0,
+    hint: "Use two different mechanisms: kinetic energy below optimum and structure above it.", misconception: "Asymmetry of a temperature–activity curve",
+    explanation: "Below optimum, increasing kinetic energy raises effective-collision frequency. Above optimum, bonds maintaining enzyme structure are disrupted and active sites rapidly lose complementarity.",
+    source: "Enzymes.pdf · PDF p.23 · printed p.101", sourceImage: "/materials/enzymes/page-23.jpg", sourcePage: 101,
+  },
+  {
+    id: "bio-enzyme-competitive-binding", code: "1(r)", eyebrow: "Verified source · binding site", objective: "1(r) Inhibitor binding", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "Where does a reversible competitive inhibitor bind?",
+    options: ["At the enzyme's active site", "Only to the substrate", "At a site on the product", "To the phospholipid bilayer"], answer: 0,
+    hint: "It competes directly with substrate molecules.", misconception: "Competitive-inhibitor binding site",
+    explanation: "A competitive inhibitor is sufficiently similar to the substrate to bind reversibly at the active site and block substrate binding.",
+    source: "Enzymes.pdf · PDF p.28 · printed p.106", sourceImage: "/materials/enzymes/page-28.jpg", sourcePage: 106,
+  },
+  {
+    id: "bio-enzyme-noncompetitive-binding", code: "1(r)", eyebrow: "Verified source · structural effect", objective: "1(r) Inhibitor binding", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "How can a non-competitive inhibitor reduce catalysis without occupying the active site?",
+    options: ["Binding elsewhere changes enzyme conformation and active-site function", "It removes all substrate from the solution", "It converts the enzyme into ATP", "It raises substrate concentration"], answer: 0,
+    hint: "Connect a second binding site to a change in enzyme shape.", misconception: "Allosteric effect of non-competitive inhibition",
+    explanation: "Binding at another site changes the enzyme's conformation, so the active site binds substrate less effectively or cannot catalyse the reaction.",
+    source: "Enzymes.pdf · PDF p.30 · printed p.108", sourceImage: "/materials/enzymes/page-30.jpg", sourcePage: 108,
+  },
+  {
+    id: "bio-enzyme-inhibitor-structure", code: "1(r)", eyebrow: "Verified source · predict binding", objective: "1(r) Inhibitor binding", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "A drug closely resembles the normal substrate of an enzyme. Which inhibition mechanism is most likely?",
+    options: ["Competition for the active site", "Binding only to the product", "Permanent increase in enzyme concentration", "Osmosis through the enzyme"], answer: 0,
+    hint: "Structural similarity can create complementarity with one particular site.", misconception: "Using molecular similarity to infer inhibition",
+    explanation: "A substrate analogue is likely to fit the active site and compete with the normal substrate, producing competitive inhibition.",
+    source: "Enzymes.pdf · PDF p.28 · printed p.106", sourceImage: "/materials/enzymes/page-28.jpg", sourcePage: 106,
+  },
+  {
+    id: "bio-enzyme-competitive-substrate", code: "1(s)", eyebrow: "Verified source · predict an effect", objective: "1(s) Effects of inhibitors", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why can increasing substrate concentration reduce the effect of a competitive inhibitor?",
+    options: ["More substrate increases the probability that substrate, rather than inhibitor, occupies an active site", "Substrate destroys the inhibitor", "The inhibitor becomes an enzyme", "Vmax must decrease"], answer: 0,
+    hint: "Think in probabilities of collision and binding.", misconception: "Overcoming competitive inhibition",
+    explanation: "At higher substrate concentration, substrate molecules are more likely to occupy active sites, so the original Vmax can still be approached.",
+    source: "Enzymes.pdf · PDF p.28 · printed p.106", sourceImage: "/materials/enzymes/page-28.jpg", sourcePage: 106,
+  },
+  {
+    id: "bio-enzyme-noncompetitive-vmax", code: "1(s)", eyebrow: "Verified source · graph interpretation", objective: "1(s) Effects of inhibitors", marks: 2, skill: "Application", difficulty: 3,
+    prompt: "A reaction cannot reach its original Vmax even at very high substrate concentration. What is the best explanation?",
+    options: ["A proportion of enzyme molecules has been made non-functional by non-competitive inhibition", "The reaction has no enzyme", "All substrate has become an inhibitor", "Competitive inhibition has been fully overcome"], answer: 0,
+    hint: "Ask whether adding substrate can restore the number of functional enzyme molecules.", misconception: "Vmax under non-competitive inhibition",
+    explanation: "Non-competitive inhibition lowers effective enzyme concentration. Extra substrate cannot restore those functional catalytic sites, so the original Vmax is not reached.",
+    source: "Enzymes.pdf · PDF p.30 · printed p.108", sourceImage: "/materials/enzymes/page-30.jpg", sourcePage: 108,
+  },
+  {
+    id: "bio-enzyme-compare-inhibitors", code: "1(s)", eyebrow: "Verified source · exam distinction", objective: "1(s) Effects of inhibitors", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "Which observation best distinguishes competitive from non-competitive inhibition?",
+    options: ["Only competitive inhibition can be substantially reduced by increasing substrate concentration", "Only competitive inhibitors bind to enzymes", "Only non-competitive inhibitors reduce initial rate", "Both always lower the original Vmax equally"], answer: 0,
+    hint: "Compare what happens when substrate concentration becomes very high.", misconception: "Distinguishing inhibitor effects experimentally",
+    explanation: "More substrate can outcompete a competitive inhibitor at the active site. It cannot reverse the loss of functional enzyme caused by non-competitive inhibition.",
+    source: "Enzymes.pdf · PDF pp.28–30 · printed pp.106–108", sourceImage: "/materials/enzymes/page-30.jpg", sourcePage: 108,
+  },
+];
+
+export const transportQuestions: BiologyQuestion[] = [
+  {
+    id: "bio-transport-fluid", code: "1(j)", eyebrow: "Verified source · terminology", objective: "1(j) Fluid mosaic membrane", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "Why is the cell-surface membrane described as fluid?",
+    options: ["Phospholipids and some proteins can move laterally within the bilayer", "The membrane is made entirely of water", "All proteins continuously leave the membrane", "Phospholipids dissolve in cytoplasm"], answer: 0,
+    hint: "Focus on movement within, not away from, the bilayer.", misconception: "Meaning of fluid in the fluid mosaic model",
+    explanation: "Individual phospholipids and some membrane proteins move laterally within the bilayer, giving the membrane a dynamic, fluid character.",
+    source: "Cellular Transport.pdf · PDF p.2 · printed p.120", sourceImage: "/materials/transport/page-2.jpg", sourcePage: 120,
+  },
+  {
+    id: "bio-transport-mosaic", code: "1(j)", eyebrow: "Verified source · model language", objective: "1(j) Fluid mosaic membrane", marks: 2, skill: "Exam technique", difficulty: 2,
+    prompt: "What does mosaic mean in the fluid mosaic model?",
+    options: ["Different proteins are scattered in a varied arrangement among phospholipids", "Every membrane has a tiled cell wall", "Lipids form fixed square blocks", "The membrane contains only one kind of protein"], answer: 0,
+    hint: "A mosaic is a varied pattern made from different components.", misconception: "Meaning of mosaic in the membrane model",
+    explanation: "The diverse types and irregular distribution of proteins among the phospholipids create the membrane's mosaic appearance.",
+    source: "Cellular Transport.pdf · PDF p.2 · printed p.120", sourceImage: "/materials/transport/page-2.jpg", sourcePage: 120,
+  },
+  {
+    id: "bio-transport-cholesterol-cold", code: "1(j)", eyebrow: "Verified source · temperature transfer", objective: "1(j) Fluid mosaic membrane", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "How does cholesterol help a membrane at low temperature?",
+    options: ["It prevents close packing of phospholipids and reduces solidification", "It removes every membrane protein", "It makes fatty-acid tails longer", "It hydrolyses phospholipids"], answer: 0,
+    hint: "At low temperature, the danger is excessive rigidity.", misconception: "Cholesterol's temperature-dependent role",
+    explanation: "Cholesterol disrupts close packing of phospholipid tails, helping the membrane remain fluid rather than becoming too rigid.",
+    source: "Cellular Transport.pdf · PDF p.5 · printed p.123", sourceImage: "/materials/transport/page-5.jpg", sourcePage: 123,
+  },
+  {
+    id: "bio-transport-cholesterol-high", code: "1(j)", eyebrow: "Verified source · dual regulation", objective: "1(j) Fluid mosaic membrane", marks: 2, skill: "Application", difficulty: 3,
+    prompt: "At relatively high temperature, why can cholesterol make a membrane less fluid?",
+    options: ["It restrains movement of phospholipid hydrocarbon tails", "It converts phospholipids into glucose", "It creates pores for water", "It removes hydrophilic phosphate heads"], answer: 0,
+    hint: "Cholesterol buffers fluidity in both directions.", misconception: "Cholesterol at high temperature",
+    explanation: "Interactions between cholesterol and fatty-acid tails restrict their movement, preventing the membrane from becoming excessively fluid.",
+    source: "Cellular Transport.pdf · PDF p.5 · printed p.123", sourceImage: "/materials/transport/page-5.jpg", sourcePage: 123,
+  },
+  {
+    id: "bio-transport-barrier", code: "1(k)", eyebrow: "Verified source · structure and function", objective: "1(k) Membrane functions", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "Which membrane feature forms the main barrier to ions and most polar molecules?",
+    options: ["The hydrophobic interior of the phospholipid bilayer", "Carbohydrate chains on the external surface", "The hydrophilic phosphate heads alone", "Ribosomes attached to the membrane"], answer: 0,
+    hint: "Charged particles are excluded by a non-polar region.", misconception: "Basis of selective permeability",
+    explanation: "The bilayer's hydrophobic core resists passage of ions and polar solutes, while specific transport proteins provide controlled routes.",
+    source: "Cellular Transport.pdf · PDF p.2 · printed p.120", sourceImage: "/materials/transport/page-2.jpg", sourcePage: 120,
+  },
+  {
+    id: "bio-transport-channel-function", code: "1(k)", eyebrow: "Verified source · protein function", objective: "1(k) Membrane functions", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why can an ion cross a membrane through a channel protein but not readily through the phospholipid bilayer?",
+    options: ["The channel provides a hydrophilic passage through the hydrophobic core", "The channel turns the ion into a lipid", "The bilayer contains no carbon", "The channel always uses ATP"], answer: 0,
+    hint: "Compare the chemical environment inside a channel with the bilayer core.", misconception: "How channel proteins enable transport",
+    explanation: "Hydrophilic amino-acid groups line the channel, shielding the ion from the membrane's hydrophobic interior.",
+    source: "Cellular Transport.pdf · PDF p.17 · printed p.134", sourceImage: "/materials/transport/page-17.jpg", sourcePage: 134,
+  },
+  {
+    id: "bio-transport-receptor", code: "1(k)", eyebrow: "Verified source · cell recognition", objective: "1(k) Membrane functions", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why are different glycoproteins useful on the external surface of a cell?",
+    options: ["Their varied carbohydrate chains can act in recognition and receptor binding", "They produce ATP in the bilayer", "They make the membrane completely impermeable", "They replace phospholipids"], answer: 0,
+    hint: "Think about specific shapes exposed to the extracellular environment.", misconception: "Roles of membrane glycoproteins",
+    explanation: "Distinct carbohydrate chains form specific recognition markers and binding sites, supporting cell signalling and identification.",
+    source: "Cellular Transport.pdf · PDF p.2 · printed p.120", sourceImage: "/materials/transport/page-2.jpg", sourcePage: 120,
+  },
+  {
+    id: "bio-transport-compartment", code: "1(k)", eyebrow: "Verified source · systems reasoning", objective: "1(k) Membrane functions", marks: 2, skill: "Exam technique", difficulty: 3,
+    prompt: "Why is membrane compartmentalisation important for metabolism?",
+    options: ["It maintains distinct conditions and concentrates enzymes for different reactions", "It forces every reaction to occur at the cell surface", "It prevents all movement between compartments", "It makes enzymes non-specific"], answer: 0,
+    hint: "Different metabolic pathways often need different local conditions.", misconception: "Purpose of intracellular membranes",
+    explanation: "Membranes separate reaction environments and organise enzymes, allowing incompatible processes and gradients to be maintained efficiently.",
+    source: "Cellular Transport.pdf · PDF p.2 · printed p.120", sourceImage: "/materials/transport/page-2.jpg", sourcePage: 120,
+  },
+  {
+    id: "bio-transport-osmosis", code: "1(l)", eyebrow: "Verified source · direction", objective: "1(l) Membrane transport", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "Which statement correctly defines osmosis?",
+    options: ["Net movement of water from higher to lower water potential across a selectively permeable membrane", "Movement of solute against its gradient using ATP", "Movement of any particle through a protein", "Engulfing particles in vesicles"], answer: 0,
+    hint: "A complete definition needs the substance, direction and membrane.", misconception: "Definition and direction of osmosis",
+    explanation: "Osmosis is the net movement of water molecules down a water-potential gradient across a selectively permeable membrane.",
+    source: "Cellular Transport.pdf · PDF p.15 · printed p.132", sourceImage: "/materials/transport/page-15.jpg", sourcePage: 132,
+  },
+  {
+    id: "bio-transport-facilitated", code: "1(l)", eyebrow: "Verified source · compare processes", objective: "1(l) Membrane transport", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "What do facilitated diffusion and simple diffusion have in common?",
+    options: ["Both are passive and move particles down a concentration gradient", "Both require ATP hydrolysis", "Both move only water", "Both form vesicles"], answer: 0,
+    hint: "Separate energy requirement from the route taken.", misconception: "Facilitated versus simple diffusion",
+    explanation: "Both processes are passive and occur down a concentration gradient; facilitated diffusion differs because it uses channel or carrier proteins.",
+    source: "Cellular Transport.pdf · PDF p.17 · printed p.134", sourceImage: "/materials/transport/page-17.jpg", sourcePage: 134,
+  },
+  {
+    id: "bio-transport-active", code: "1(l)", eyebrow: "Verified source · molecular mechanism", objective: "1(l) Membrane transport", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "How does ATP hydrolysis drive active transport by a membrane pump?",
+    options: ["Phosphate transfer changes the protein's conformation, moving the solute against its gradient", "ATP widens the phospholipid bilayer permanently", "ATP converts the solute into water", "Hydrolysis makes diffusion occur uphill without a protein"], answer: 0,
+    hint: "Link ATP, phosphate, protein shape and direction of movement.", misconception: "Energy coupling in active transport",
+    explanation: "ATP hydrolysis transfers a phosphate to the transport protein, inducing a conformational change that translocates the solute against its concentration gradient.",
+    source: "Cellular Transport.pdf · PDF p.18 · printed p.135", sourceImage: "/materials/transport/page-18.jpg", sourcePage: 135,
+  },
+  {
+    id: "bio-transport-endocytosis", code: "1(l)", eyebrow: "Verified source · process selection", objective: "1(l) Membrane transport", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Which process allows a cell to take up a specific low-concentration macromolecule using surface receptors?",
+    options: ["Receptor-mediated endocytosis", "Simple diffusion", "Osmosis", "Non-competitive inhibition"], answer: 0,
+    hint: "The clue is the requirement for a specific ligand–receptor interaction.", misconception: "Types of bulk transport",
+    explanation: "Specific ligands bind membrane receptors, which cluster in coated pits and form vesicles during receptor-mediated endocytosis.",
+    source: "Cellular Transport.pdf · PDF p.21 · printed p.138", sourceImage: "/materials/transport/page-21.jpg", sourcePage: 138,
+  },
+];
+
+export const verifiedBiologyQuestions: BiologyQuestion[] = [
+  ...biomoleculeQuestions,
+  ...enzymeQuestions,
+  ...transportQuestions,
+];
+
+export const verifiedBiologyAnswerKey = Object.fromEntries(
+  verifiedBiologyQuestions.map((question) => [question.id, question]),
+);
