@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, pickNextQuestion, reviewLabel } from "@/lib/adaptive.mjs";
+import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, objectiveNeedsPractice, pickNextQuestion, reviewLabel } from "@/lib/adaptive.mjs";
 import { packOrderForSource, pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions, type PackStatus } from "@/lib/biology-content";
 
 type Subject = "Biology" | "Chemistry";
@@ -479,9 +479,9 @@ export default function Home() {
   const [packSaving, setPackSaving] = useState<number | null>(null);
   const [packNotice, setPackNotice] = useState("");
   const [files, setFiles] = useState<FileItem[]>([
-    { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-    { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-    { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+    { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "7. The Cell Cycle.pdf", meta: "60 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
@@ -500,7 +500,8 @@ export default function Home() {
   const preferredFormats = mode === "Exam-style" ? ["structured", "practical", "data"] : mode === "Image-heavy" ? ["image", "data"] : [];
   const plannedQuestions = minutes === 15 ? 5 : minutes === 40 ? 12 : 8;
   const today = dateKey();
-  const dailyPlan = useMemo(() => [...currentMastery].sort((a, b) => Number(isReviewDue(b.due, today)) - Number(isReviewDue(a.due, today)) || a.score - b.score || a.evidence - b.evidence).slice(0, 5), [currentMastery, today]);
+  const practiceMastery = useMemo(() => currentMastery.filter((item) => objectiveNeedsPractice(item, today)), [currentMastery, today]);
+  const dailyPlan = useMemo(() => [...practiceMastery].sort((a, b) => Number(isReviewDue(b.due, today)) - Number(isReviewDue(a.due, today)) || a.score - b.score || a.evidence - b.evidence).slice(0, 5), [practiceMastery, today]);
   const dueCount = currentMastery.filter((item) => isReviewDue(item.due, today)).length;
   const liveBiologyQuestions = useMemo(() => {
     const liveOrders = new Set(packStates.filter((pack) => pack.status === "Live").map((pack) => pack.packOrder));
@@ -509,9 +510,14 @@ export default function Home() {
       return order !== null && liveOrders.has(order);
     });
   }, [packStates]);
+  const adaptiveBiologyQuestions = useMemo(() => {
+    const activeCodes = new Set(practiceMastery.map((item) => item.code));
+    return liveBiologyQuestions.filter((question) => activeCodes.has(question.code));
+  }, [liveBiologyQuestions, practiceMastery]);
   const livePackCount = packStates.filter((pack) => pack.status === "Live").length;
   const draftPackCount = packStates.filter((pack) => pack.status === "Draft").length;
   const verifiedObjectiveCount = syllabusAreas.reduce((total, area) => total + area.verified, 0);
+  const restingCount = currentMastery.length - practiceMastery.length;
 
   const weakTopic = useMemo(() => [...currentMastery].sort((a, b) => a.score - b.score)[0], [currentMastery]);
   const sessionGaps = [...new Set(sessionResults.flatMap((result) => result.missedPoints))];
@@ -538,9 +544,9 @@ export default function Home() {
       setPackStates(packs.packs as PackState[]);
       setPackAdmin(Boolean(packs.isAdmin));
       const base: FileItem[] = subject === "Biology" ? [
-        { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-        { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
-        { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+        { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "7. The Cell Cycle.pdf", meta: "60 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
@@ -568,7 +574,7 @@ export default function Home() {
   function startSession(kind: SessionKind = "practice", focusCode?: string) {
     const target = kind === "diagnostic" ? 8 : kind === "quick" ? 6 : minutes === 15 ? 5 : minutes === 40 ? 12 : 8;
     const pool = subject === "Biology" ? liveBiologyQuestions : questions[subject];
-    const focusedPool = focusCode ? pool.filter((question) => question.code === focusCode) : pool;
+    const focusedPool = focusCode ? pool.filter((question) => question.code === focusCode) : subject === "Biology" ? adaptiveBiologyQuestions : pool;
     const first = pickNextQuestion({ questions: focusedPool, seenIds: [], mastery: currentMastery, preferredFormats });
     if (!first) {
       setCloudStatus("No published questions are available for this objective yet");
@@ -691,7 +697,7 @@ export default function Home() {
       return;
     }
     const next = pickNextQuestion({
-      questions: subject === "Biology" ? liveBiologyQuestions : questions[subject],
+      questions: subject === "Biology" ? adaptiveBiologyQuestions : questions[subject],
       seenIds: sessionQuestions.map((question) => question.id),
       mastery: currentMastery,
       lastResult,
@@ -915,28 +921,28 @@ export default function Home() {
         ) : view === "today" ? (
           <section className="page-content">
             <div className="page-heading">
-              <div><p>{new Intl.DateTimeFormat("en-SG", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Singapore" }).format(new Date())}</p><h1>Your Biology plan for today</h1><span>{dueCount ? `${dueCount} objectives are due. Aster has prioritised the weakest evidence first.` : "No reviews are overdue. Today will strengthen your least-certain objectives."}</span></div>
+              <div><p>{new Intl.DateTimeFormat("en-SG", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Singapore" }).format(new Date())}</p><h1>Your Biology plan for today</h1><span>{dueCount ? `${dueCount} objectives are due. Aster has prioritised the weakest evidence first.` : restingCount ? `${restingCount} mastered objective${restingCount === 1 ? " is" : "s are"} resting until review. Aster will work only on remaining gaps.` : "No reviews are overdue. Today will strengthen your least-certain objectives."}</span></div>
               <div className="streak"><span>✓</span><div><strong>{todayStats.answered} answered today</strong><small>{todayStats.secure} correct · {dueCount} reviews due</small></div></div>
             </div>
 
             <article className="assessment-strip">
               <div className="assessment-status"><span>Evidence confidence</span><strong>{totalEvidence < 24 ? "Developing" : "Established"}</strong><small>{totalEvidence} evidence points · {cloudStatus}</small></div>
-              <div className="assessment-copy"><strong>Continuous assessment</strong><p>Every answer updates mastery, confidence and a real review date. Structured-answer omissions return as targeted practice.</p></div>
-              <button className="outline-button" onClick={() => startSession("quick")}>Quick Check · 6</button>
-              <button className="primary-button" onClick={() => startSession("diagnostic")}>Full Diagnostic · 8 →</button>
+              <div className="assessment-copy"><strong>Continuous assessment</strong><p>Every answer updates mastery and a real review date. Secure objectives pause automatically; omissions return as targeted practice.</p></div>
+              <button className="outline-button" disabled={!practiceMastery.length} onClick={() => startSession("quick")}>Quick Check · 6</button>
+              <button className="primary-button" disabled={!practiceMastery.length} onClick={() => startSession("diagnostic")}>Full Diagnostic · 8 →</button>
             </article>
 
             <div className="hero-grid">
               <article className="focus-card">
                 <div className="focus-top"><span>{subject === "Biology" ? "DAILY STUDY PLAN" : "YOUR NEXT SESSION"}</span><em>{dueCount ? `${dueCount} due` : "On schedule"}</em></div>
-                <h2>{subject === "Biology" ? `Start with ${dailyPlan[0]?.topic ?? weakTopic.topic}` : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
-                <p>{subject === "Biology" ? `Aster will mix ${plannedQuestions} questions across due reviews, weak evidence and different exam formats. The plan changes after every answer.` : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
+                <h2>{subject === "Biology" ? dailyPlan[0] ? `Start with ${dailyPlan[0].topic}` : "You’re caught up" : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
+                <p>{subject === "Biology" ? dailyPlan[0] ? `Aster will mix ${plannedQuestions} questions across due reviews, weak evidence and different exam formats. The plan changes after every answer.` : "No reinforcement is needed now. Mastered objectives will return automatically on their review date." : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
                 <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {plannedQuestions} questions</span><span>▧ {mode}</span></div>
                 <div className="focus-controls">
                   <div className="segmented" aria-label="Session duration">
                     {[15, 25, 40].map((value) => <button key={value} className={minutes === value ? "active" : ""} onClick={() => setMinutes(value)}>{value}m</button>)}
                   </div>
-                  <button className="primary-button" onClick={() => startSession("practice")}>Start today’s plan <span>→</span></button>
+                  <button className="primary-button" disabled={subject === "Biology" && !practiceMastery.length} onClick={() => startSession("practice")}>{subject === "Biology" && !practiceMastery.length ? "Plan complete" : "Start today’s plan"} <span>→</span></button>
                 </div>
                 <div className="focus-decoration"><span /><span /><span /></div>
               </article>
@@ -952,7 +958,7 @@ export default function Home() {
               <article className="panel mastery-panel">
                 <div className="panel-heading"><div><h3>Priority objectives</h3><p>Chosen from your syllabus and recent answers</p></div><button onClick={() => setView("map")}>Full map →</button></div>
                 <div className="mastery-list">
-                  {dailyPlan.map((item) => (
+                  {dailyPlan.length ? dailyPlan.map((item) => (
                     <button className="mastery-row" key={item.code} onClick={() => startSession("practice", item.code)}>
                       <Ring value={item.score} />
                       <div><strong>{item.topic}</strong><span>{item.note} · {reviewLabel(item.due, today)}</span></div>
@@ -960,7 +966,7 @@ export default function Home() {
                       <small className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</small>
                       <b>›</b>
                     </button>
-                  ))}
+                  )) : <div className="empty-evidence"><strong>No objectives need reinforcement</strong><p>Aster will bring them back when a scheduled review becomes due.</p></div>}
                 </div>
               </article>
 

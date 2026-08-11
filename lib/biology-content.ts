@@ -1,9 +1,12 @@
-import { biomoleculeQuestions, type BiomoleculeQuestion } from "./biomolecules.ts";
+import { biomoleculeQuestions as biomoleculeSeedQuestions, type BiomoleculeQuestion } from "./biomolecules.ts";
+import { biomoleculeMatureQuestions, enzymeMatureQuestions, transportMatureQuestions } from "./core1-mature-questions.ts";
 import { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions } from "./core2-questions.ts";
 
 export { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions };
 
 export type BiologyQuestion = BiomoleculeQuestion;
+
+export const biomoleculeQuestions: BiologyQuestion[] = [...biomoleculeSeedQuestions, ...biomoleculeMatureQuestions];
 
 export const syllabusAreas = [
   { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(u)", outcomes: 21, sourced: 17, verified: 10, status: "In verification", note: "Biomolecules, membranes and enzymes are live. Cell Structure 1(a)–1(d) has no supplied PDF." },
@@ -22,9 +25,9 @@ export const practicalSkills = [
 ] as const;
 
 export const pdfPipeline = [
-  { order: 2, name: "Biomolecules.pdf", pages: 94, images: 206, mapping: "1(g)–1(i)", status: "Verified", questions: 12 },
-  { order: 3, name: "Enzymes.pdf", pages: 38, images: 71, mapping: "1(p)–1(s)", status: "Verified", questions: 12 },
-  { order: 4, name: "Cellular Transport.pdf", pages: 25, images: 40, mapping: "1(j)–1(l)", status: "Verified", questions: 12 },
+  { order: 2, name: "Biomolecules.pdf", pages: 94, images: 206, mapping: "1(g)–1(i)", status: "Verified", questions: 30 },
+  { order: 3, name: "Enzymes.pdf", pages: 38, images: 71, mapping: "1(p)–1(s)", status: "Verified", questions: 30 },
+  { order: 4, name: "Cellular Transport.pdf", pages: 25, images: 40, mapping: "1(j)–1(l)", status: "Verified", questions: 30 },
   { order: 5, name: "Photosynthesis.pdf", pages: 40, images: 149, mapping: "3(a)–3(e), 3(l)", status: "Verified", questions: 30 },
   { order: 6, name: "Cellular Respiration.pdf", pages: 24, images: 64, mapping: "3(f)–3(j), 3(l)", status: "Verified", questions: 30 },
   { order: 7, name: "The Cell Cycle.pdf", pages: 60, images: 151, mapping: "2(n)–2(o), 2(s)–2(t)", status: "Verified", questions: 30 },
@@ -55,7 +58,7 @@ export function canTransitionPack(current: PackStatus, next: PackStatus, questio
   return current === "Live" && next === "Draft";
 }
 
-export const enzymeQuestions: BiologyQuestion[] = [
+const enzymeSeedQuestions: BiologyQuestion[] = [
   {
     id: "bio-enzyme-active-site", code: "1(p)", eyebrow: "Verified source · mechanism", objective: "1(p) Enzyme mode of action", marks: 2, skill: "Knowledge", difficulty: 1,
     prompt: "Which event directly explains how an enzyme lowers the activation energy of a reaction?",
@@ -154,7 +157,9 @@ export const enzymeQuestions: BiologyQuestion[] = [
   },
 ];
 
-export const transportQuestions: BiologyQuestion[] = [
+export const enzymeQuestions: BiologyQuestion[] = [...enzymeSeedQuestions, ...enzymeMatureQuestions];
+
+const transportSeedQuestions: BiologyQuestion[] = [
   {
     id: "bio-transport-fluid", code: "1(j)", eyebrow: "Verified source · terminology", objective: "1(j) Fluid mosaic membrane", marks: 2, skill: "Knowledge", difficulty: 1,
     prompt: "Why is the cell-surface membrane described as fluid?",
@@ -252,6 +257,8 @@ export const transportQuestions: BiologyQuestion[] = [
     source: "Cellular Transport.pdf · PDF p.21 · printed p.138", sourceImage: "/materials/transport/page-21.jpg", sourcePage: 138,
   },
 ];
+
+export const transportQuestions: BiologyQuestion[] = [...transportSeedQuestions, ...transportMatureQuestions];
 
 export const photosynthesisQuestions: BiologyQuestion[] = [
   {

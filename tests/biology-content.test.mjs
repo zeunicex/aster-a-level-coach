@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import test from "node:test";
 import {
+  biomoleculeQuestions,
   cellCycleQuestions,
   enzymeQuestions,
   geneExpressionQuestions,
@@ -27,20 +28,27 @@ test("complete 9477 map and 17-PDF pipeline use verified source counts", () => {
   assert.equal(pdfPipeline.filter((file) => file.status === "Verified").length, 9);
 });
 
-test("Enzymes and Cellular Transport are continuous verified packs", () => {
-  assert.equal(enzymeQuestions.length, 12);
-  assert.equal(transportQuestions.length, 12);
-  assert.equal(verifiedBiologyQuestions.length, 216);
-  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 216);
+test("Core 1 packs are mature and continuous", () => {
+  assert.deepEqual([biomoleculeQuestions.length, enzymeQuestions.length, transportQuestions.length], [30, 30, 30]);
+  assert.equal(verifiedBiologyQuestions.length, 270);
+  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 270);
 
   for (const code of ["1(g)", "1(h)", "1(i)", "1(j)", "1(k)", "1(l)", "1(p)", "1(q)", "1(r)", "1(s)"]) {
     assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 3, code);
   }
 
-  for (const question of [...enzymeQuestions, ...transportQuestions]) {
-    assert.ok(existsSync(`public${question.sourceImage}`), question.sourceImage);
-    assert.ok(question.answer >= 0 && question.answer < question.options.length);
-    assert.match(question.source, /PDF pp?\./);
+  for (const pack of [biomoleculeQuestions, enzymeQuestions, transportQuestions]) {
+    assert.deepEqual(new Set(pack.map((question) => question.format ?? "mcq")), new Set(["mcq", "image", "sequence", "data", "structured", "practical"]));
+    for (const question of pack) {
+      assert.ok(existsSync(`public${question.sourceImage}`), question.sourceImage);
+      assert.match(question.source, /pdf/i);
+      if (question.markPoints) {
+        assert.equal(question.markPoints.length, question.marks, question.id);
+        assert.ok(question.modelAnswer, question.id);
+      } else {
+        assert.ok(question.answer >= 0 && question.answer < question.options.length, question.id);
+      }
+    }
   }
 });
 
