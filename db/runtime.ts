@@ -49,5 +49,11 @@ export async function getStore() {
     db.prepare("CREATE INDEX IF NOT EXISTS idx_materials_user_created ON materials(user_id, created_at)"),
   ]);
 
+  const attemptColumns = await db.prepare("PRAGMA table_info(attempts)").all<{ name: string }>();
+  const names = new Set(attemptColumns.results.map((column) => column.name));
+  if (!names.has("awarded_marks")) await db.prepare("ALTER TABLE attempts ADD COLUMN awarded_marks INTEGER").run();
+  if (!names.has("total_marks")) await db.prepare("ALTER TABLE attempts ADD COLUMN total_marks INTEGER").run();
+  if (!names.has("missed_points")) await db.prepare("ALTER TABLE attempts ADD COLUMN missed_points TEXT").run();
+
   return db;
 }

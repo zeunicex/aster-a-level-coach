@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, pickNextQuestion } from "@/lib/adaptive.mjs";
+import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, pickNextQuestion, reviewLabel } from "@/lib/adaptive.mjs";
 import { pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions } from "@/lib/biology-content";
 
 type Subject = "Biology" | "Chemistry";
@@ -46,6 +46,8 @@ type Question = {
   sourcePage?: number;
 };
 type FileItem = { id?: string; name: string; meta: string; tag: string; status?: string };
+type LearningGap = { point: string; code: string; count: number };
+type SessionResult = { code: string; topic: string; correct: boolean; secure: boolean; format: QuestionFormat; missedPoints: string[] };
 const formatLabels: Record<QuestionFormat, string> = {
   mcq: "Multiple choice",
   image: "Image interpretation",
@@ -439,10 +441,13 @@ export default function Home() {
   const [usedHint, setUsedHint] = useState(false);
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState(0);
-  const [sessionDelta, setSessionDelta] = useState(0);
   const [evidenceAdded, setEvidenceAdded] = useState(0);
   const [lastResult, setLastResult] = useState<{ code: string; correct: boolean; format: QuestionFormat } | null>(null);
   const [lastEvidence, setLastEvidence] = useState<{ delta: number; label: string; confidence: Confidence } | null>(null);
+  const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
+  const [todayStats, setTodayStats] = useState({ answered: 0, secure: 0 });
+  const [learningGaps, setLearningGaps] = useState<LearningGap[]>([]);
+  const [totalAttempts, setTotalAttempts] = useState(0);
   const [complete, setComplete] = useState(false);
   const [saving, setSaving] = useState(false);
   const [cloudStatus, setCloudStatus] = useState("Connecting to saved progress…");
@@ -463,8 +468,20 @@ export default function Home() {
   const activeFormat = activeQuestion.format ?? "mcq";
   const isWritten = Boolean(activeQuestion.markPoints?.length);
   const preferredFormats = mode === "Exam-style" ? ["structured", "practical", "data"] : mode === "Image-heavy" ? ["image", "data"] : [];
+  const plannedQuestions = minutes === 15 ? 5 : minutes === 40 ? 12 : 8;
+  const today = dateKey();
+  const dailyPlan = useMemo(() => [...currentMastery].sort((a, b) => Number(isReviewDue(b.due, today)) - Number(isReviewDue(a.due, today)) || a.score - b.score || a.evidence - b.evidence).slice(0, 5), [currentMastery, today]);
+  const dueCount = currentMastery.filter((item) => isReviewDue(item.due, today)).length;
 
   const weakTopic = useMemo(() => [...currentMastery].sort((a, b) => a.score - b.score)[0], [currentMastery]);
+  const sessionGaps = [...new Set(sessionResults.flatMap((result) => result.missedPoints))];
+  const supportedCount = sessionResults.filter((result) => result.correct && !result.secure).length;
+  const revisitTopics = [...new Set(sessionResults.filter((result) => !result.correct).map((result) => result.topic))];
+  const skillProfile = [
+    ["Knowledge", Math.round(currentMastery.reduce((sum, item) => sum + item.knowledge, 0) / currentMastery.length)],
+    ["Application", Math.round(currentMastery.reduce((sum, item) => sum + item.application, 0) / currentMastery.length)],
+    ["Exam language", Math.round(currentMastery.reduce((sum, item) => sum + item.exam, 0) / currentMastery.length)],
+  ] as const;
 
   useEffect(() => {
     let active = true;
@@ -474,6 +491,9 @@ export default function Home() {
     ]).then(([learning, materials]) => {
       if (!active) return;
       setMasteryState((current) => ({ ...current, [subject]: learning.mastery as MasteryItem[] }));
+      setTodayStats(learning.todayStats ?? { answered: 0, secure: 0 });
+      setLearningGaps(learning.missedPoints ?? []);
+      setTotalAttempts(learning.attempts ?? 0);
       const base: FileItem[] = subject === "Biology" ? [
         { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
@@ -499,7 +519,7 @@ export default function Home() {
   }, [subject]);
 
   function startSession(kind: SessionKind = "practice", focusCode?: string) {
-    const target = kind === "diagnostic" ? 8 : kind === "quick" ? 6 : 5;
+    const target = kind === "diagnostic" ? 8 : kind === "quick" ? 6 : minutes === 15 ? 5 : minutes === 40 ? 12 : 8;
     const pool = subject === "Biology" ? verifiedBiologyQuestions : questions[subject];
     const focusedPool = focusCode ? pool.filter((question) => question.code === focusCode) : pool;
     const first = pickNextQuestion({ questions: focusedPool, seenIds: [], mastery: currentMastery, preferredFormats });
@@ -516,16 +536,18 @@ export default function Home() {
     setUsedHint(false);
     setChecked(false);
     setScore(0);
-    setSessionDelta(0);
     setEvidenceAdded(0);
     setLastResult(null);
     setLastEvidence(null);
+    setSessionResults([]);
     setComplete(false);
   }
 
-  async function recordAnswer(selectedAnswer?: number, awardedMarks?: number) {
+  async function recordAnswer(selectedAnswer?: number, awardedPointIndexes: number[] = []) {
     if (answerConfidence === null) return;
     setSaving(true);
+    const awardedMarks = awardedPointIndexes.length;
+    let missedPoints = isWritten ? activeQuestion.markPoints!.filter((_, index) => !awardedPointIndexes.includes(index)) : [];
     let correct = isWritten
       ? Number(awardedMarks) / activeQuestion.marks >= 0.75
       : selectedAnswer === activeQuestion.answer;
@@ -538,12 +560,13 @@ export default function Home() {
         const response = await fetch("/api/learning", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ questionId: activeQuestion.id, selected: selectedAnswer, awardedMarks, confidence: answerConfidence, usedHint }),
+          body: JSON.stringify({ questionId: activeQuestion.id, selected: selectedAnswer, awardedPointIndexes, confidence: answerConfidence, usedHint }),
         });
         if (!response.ok) throw new Error("Save failed");
         const result = await response.json();
         correct = result.correct;
         delta = result.delta;
+        missedPoints = result.missedPoints ?? missedPoints;
         serverMastery = result.mastery;
         setCloudStatus("Saved just now");
       } catch {
@@ -568,8 +591,8 @@ export default function Home() {
           score: update(item.score),
           evidence,
           confidence: evidenceConfidence(evidence) as Confidence,
-          note: correct ? `${activeQuestion.skill} evidence strengthened` : activeQuestion.misconception,
-          due: correct && answerConfidence === "High" && !usedHint ? "3 days" : "Tomorrow",
+          note: correct ? `${activeQuestion.skill} evidence strengthened` : missedPoints[0] ?? activeQuestion.misconception,
+          due: nextReviewDate({ correct, confidence: answerConfidence, usedHint, evidence }),
         };
       }),
     }));
@@ -577,9 +600,21 @@ export default function Home() {
     setMarked(true);
     setLastResult({ code: activeQuestion.code, correct, format: activeFormat });
     setLastEvidence({ delta, label: activeQuestion.skill, confidence: answerConfidence });
-    setSessionDelta((value) => value + delta);
     setEvidenceAdded((value) => value + 1);
-    if (correct) setScore((value) => value + 1);
+    const secure = correct && answerConfidence !== "Low" && !usedHint;
+    if (secure) setScore((value) => value + 1);
+    setTodayStats((current) => ({ answered: current.answered + 1, secure: current.secure + Number(correct) }));
+    setTotalAttempts((current) => current + 1);
+    setSessionResults((current) => [...current, { code: activeQuestion.code, topic: currentMastery.find((item) => item.code === activeQuestion.code)?.topic ?? activeQuestion.objective, correct, secure, format: activeFormat, missedPoints }]);
+    if (missedPoints.length) setLearningGaps((current) => {
+      const next = [...current];
+      for (const point of missedPoints) {
+        const index = next.findIndex((item) => item.code === activeQuestion.code && item.point === point);
+        if (index >= 0) next[index] = { ...next[index], count: next[index].count + 1 };
+        else next.push({ code: activeQuestion.code, point, count: 1 });
+      }
+      return next.sort((a, b) => b.count - a.count).slice(0, 6);
+    });
     setSaving(false);
   }
 
@@ -595,7 +630,7 @@ export default function Home() {
   }
 
   async function saveSelfMark() {
-    await recordAnswer(undefined, awardedPoints.length);
+    await recordAnswer(undefined, awardedPoints);
   }
 
   function nextQuestion() {
@@ -790,37 +825,42 @@ export default function Home() {
                 <span className="completion-mark">✓</span>
                 <p>{sessionKind === "quick" ? "Quick Check complete" : sessionKind === "diagnostic" ? "Diagnostic evidence saved" : "Adaptive session complete"}</p>
                 <h1>{score} of {evidenceAdded} secure</h1>
-                <p>Aster added <strong>{evidenceAdded} evidence points</strong>. Your next session will revisit <strong>{weakTopic.topic}</strong> in a different format.</p>
-                <div className="completion-stats"><div><b>{sessionDelta >= 0 ? `+${sessionDelta}` : sessionDelta}</b><span>Net mastery evidence</span></div><div><b>{weakTopic.confidence}</b><span>Weakest-topic confidence</span></div><div><b>{evidenceAdded}</b><span>Sources verified</span></div></div>
-                <button className="primary-button" onClick={() => { setSession(false); setView("map"); }}>View updated mastery map</button>
+                <p>Aster separated secure answers from answers that used a hint or low confidence, then scheduled the next review.</p>
+                <div className="completion-stats"><div><b>{score}</b><span>Secure independently</span></div><div><b>{supportedCount}</b><span>Correct with support</span></div><div><b>{revisitTopics.length}</b><span>Topics to revisit</span></div></div>
+                <div className="completion-insights">
+                  <div><strong>Next review</strong><span>{dailyPlan[0] ? `${reviewLabel(dailyPlan[0].due, today)} · ${dailyPlan[0].topic}` : "Plan complete for today"}</span></div>
+                  <div><strong>Mark points to repair</strong>{sessionGaps.length ? <ul>{sessionGaps.slice(0, 4).map((point) => <li key={point}>{point}</li>)}</ul> : <span>No structured-answer gaps recorded in this session.</span>}</div>
+                  <div><strong>Adaptive follow-up</strong><span>{revisitTopics.length ? `${revisitTopics.slice(0, 2).join(" and ")} will return in a different format.` : "The next session will move to the weakest due objectives."}</span></div>
+                </div>
+                <div className="completion-actions"><button className="primary-button" onClick={() => { setSession(false); setView("today"); }}>Return to Today</button><button className="outline-button" onClick={() => { setSession(false); setView("map"); }}>View mastery map</button></div>
               </div>
             )}
           </section>
         ) : view === "today" ? (
           <section className="page-content">
             <div className="page-heading">
-              <div><p>Tuesday, 11 August</p><h1>Ready for today?</h1><span>Your plan has adapted around two topics that need attention.</span></div>
-              <div className="streak"><span>✦</span><div><strong>6 day streak</strong><small>Best: 11 days</small></div></div>
+              <div><p>{new Intl.DateTimeFormat("en-SG", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Singapore" }).format(new Date())}</p><h1>Your Biology plan for today</h1><span>{dueCount ? `${dueCount} objectives are due. Aster has prioritised the weakest evidence first.` : "No reviews are overdue. Today will strengthen your least-certain objectives."}</span></div>
+              <div className="streak"><span>✓</span><div><strong>{todayStats.answered} answered today</strong><small>{todayStats.secure} correct · {dueCount} reviews due</small></div></div>
             </div>
 
             <article className="assessment-strip">
               <div className="assessment-status"><span>Evidence confidence</span><strong>{totalEvidence < 24 ? "Developing" : "Established"}</strong><small>{totalEvidence} evidence points · {cloudStatus}</small></div>
-              <div className="assessment-copy"><strong>Keep the estimate honest</strong><p>Quick Check sets a starting point. Diagnostic and everyday practice keep correcting it.</p></div>
+              <div className="assessment-copy"><strong>Continuous assessment</strong><p>Every answer updates mastery, confidence and a real review date. Structured-answer omissions return as targeted practice.</p></div>
               <button className="outline-button" onClick={() => startSession("quick")}>Quick Check · 6</button>
               <button className="primary-button" onClick={() => startSession("diagnostic")}>Full Diagnostic · 8 →</button>
             </article>
 
             <div className="hero-grid">
               <article className="focus-card">
-                <div className="focus-top"><span>{subject === "Biology" ? "5 VERIFIED BIOLOGY PACKS" : "YOUR NEXT SESSION"}</span><em>Personalised</em></div>
-                <h2>{subject === "Biology" ? "Build mastery from your own Biology notes" : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
-                <p>{subject === "Biology" ? "Five verified packs now form one continuous path from biomolecules to energy transformation. Every answer updates both mastery and the next question." : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
-                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {subject === "Biology" ? "96 verified questions" : "5 evidence points"}</span><span>▧ {subject === "Biology" ? "6 question formats" : "Live adaptive path"}</span></div>
+                <div className="focus-top"><span>{subject === "Biology" ? "DAILY STUDY PLAN" : "YOUR NEXT SESSION"}</span><em>{dueCount ? `${dueCount} due` : "On schedule"}</em></div>
+                <h2>{subject === "Biology" ? `Start with ${dailyPlan[0]?.topic ?? weakTopic.topic}` : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
+                <p>{subject === "Biology" ? `Aster will mix ${plannedQuestions} questions across due reviews, weak evidence and different exam formats. The plan changes after every answer.` : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
+                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {plannedQuestions} questions</span><span>▧ {mode}</span></div>
                 <div className="focus-controls">
                   <div className="segmented" aria-label="Session duration">
                     {[15, 25, 40].map((value) => <button key={value} className={minutes === value ? "active" : ""} onClick={() => setMinutes(value)}>{value}m</button>)}
                   </div>
-                  <button className="primary-button" onClick={() => startSession("practice")}>Start session <span>→</span></button>
+                  <button className="primary-button" onClick={() => startSession("practice")}>Start today’s plan <span>→</span></button>
                 </div>
                 <div className="focus-decoration"><span /><span /><span /></div>
               </article>
@@ -836,12 +876,12 @@ export default function Home() {
               <article className="panel mastery-panel">
                 <div className="panel-heading"><div><h3>Priority objectives</h3><p>Chosen from your syllabus and recent answers</p></div><button onClick={() => setView("map")}>Full map →</button></div>
                 <div className="mastery-list">
-                  {currentMastery.slice(0, 5).map((item) => (
+                  {dailyPlan.map((item) => (
                     <button className="mastery-row" key={item.code} onClick={() => startSession("practice", item.code)}>
                       <Ring value={item.score} />
-                      <div><strong>{item.topic}</strong><span>{item.note} · {item.evidence} evidence</span></div>
+                      <div><strong>{item.topic}</strong><span>{item.note} · {reviewLabel(item.due, today)}</span></div>
                       <em>Syllabus {item.code}</em>
-                      <small className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</small>
+                      <small className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</small>
                       <b>›</b>
                     </button>
                   ))}
@@ -856,6 +896,7 @@ export default function Home() {
                 </div>
               </article>
             </div>
+            {learningGaps.length > 0 && <article className="panel gap-panel"><div className="panel-heading"><div><h3>Recurring mark-point gaps</h3><p>Aster saved these exact omissions from structured answers.</p></div><button onClick={() => setView("progress")}>All learning evidence →</button></div><div className="gap-list">{learningGaps.slice(0, 4).map((gap) => <button key={`${gap.code}-${gap.point}`} onClick={() => startSession("practice", gap.code)}><span>{gap.code}</span><p>{gap.point}</p><b>{gap.count}×</b></button>)}</div></article>}
           </section>
         ) : view === "map" ? (
           <section className="page-content map-page">
@@ -879,21 +920,22 @@ export default function Home() {
                 <article className="panel syllabus-table">
                   <div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>
                   {currentMastery.map((item) => (
-                    <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={item.due === "Today" ? "due" : ""}>{item.due}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>
+                    <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>
                   ))}
                 </article>
               </>
             ) : (
-              <><div className="map-summary"><div><Ring value={average} size={86} /><span><b>{average}%</b><small>Current mastery estimate</small></span></div><div><b>{totalEvidence}</b><small>Evidence points</small></div><div><b>{currentMastery.filter((item) => item.confidence === "Low").length}</b><small>Low-confidence estimates</small></div><div><b>{currentMastery.filter((item) => item.due === "Today").length}</b><small>Due today</small></div></div><article className="panel syllabus-table"><div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>{currentMastery.map((item) => <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={item.due === "Today" ? "due" : ""}>{item.due}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>)}</article></>
+              <><div className="map-summary"><div><Ring value={average} size={86} /><span><b>{average}%</b><small>Current mastery estimate</small></span></div><div><b>{totalEvidence}</b><small>Evidence points</small></div><div><b>{currentMastery.filter((item) => item.confidence === "Low").length}</b><small>Low-confidence estimates</small></div><div><b>{dueCount}</b><small>Due today</small></div></div><article className="panel syllabus-table"><div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>{currentMastery.map((item) => <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>)}</article></>
             )}
           </section>
         ) : view === "pipeline" ? (
           <section className="page-content pipeline-page">
-            <div className="page-heading"><div><p>Biology content operations</p><h1>{subject === "Biology" ? "17-PDF processing console" : "Chemistry content pipeline"}</h1><span>{subject === "Biology" ? "Every source has been indexed and mapped; verified means its questions and evidence pages are live." : "Add the Chemistry source pack to begin mapping."}</span></div><button className="outline-button" onClick={() => setView("library")}>Manage uploads</button></div>
+            <div className="page-heading"><div><p>Biology content operations</p><h1>{subject === "Biology" ? "Pack Studio" : "Chemistry content pipeline"}</h1><span>{subject === "Biology" ? "A single release path keeps every new chapter source-linked, reviewable and safe to update." : "Add the Chemistry source pack to begin mapping."}</span></div><button className="outline-button" onClick={() => setView("library")}>Manage sources</button></div>
             {subject === "Biology" ? <>
-              <div className="pipeline-summary"><article><span>Sources</span><b>17</b><small>all text-searchable</small></article><article><span>PDF pages</span><b>852</b><small>indexed</small></article><article><span>Detected figures</span><b>1,866</b><small>available for question design</small></article><article><span>Live packs</span><b>5</b><small>96 verified questions</small></article></div>
+              <div className="pipeline-summary"><article><span>Live packs</span><b>5</b><small>available to students</small></article><article><span>Draft packs</span><b>12</b><small>mapped, not yet released</small></article><article><span>Live questions</span><b>96</b><small>all source-linked</small></article><article><span>Source gaps</span><b>2</b><small>kept out of release</small></article></div>
+              <article className="panel release-flow"><div><b>1</b><span><strong>Draft</strong><small>PDF indexed and syllabus mapped</small></span></div><i>→</i><div><b>2</b><span><strong>Verified</strong><small>Questions, mark points and pages checked</small></span></div><i>→</i><div><b>3</b><span><strong>Live</strong><small>Versioned pack enters adaptive practice</small></span></div></article>
               <article className="pipeline-warning"><span>!</span><div><strong>Two source gaps remain visible</strong><p>Cell Structure outcomes 1(a)–1(d) have no supplied PDF, and Cellular Respiration does not cover investigation outcome 3(k). Aster leaves them unverified instead of inferring evidence.</p></div></article>
-              <article className="panel pipeline-table"><div className="pipeline-header"><span>Source</span><span>Size</span><span>9477 mapping</span><span>Status</span></div>{pdfPipeline.map((file) => <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.images} detected figures</small></div></div><p>{file.pages} pages</p><b>{file.mapping}</b><em className={file.status.toLowerCase()}>{file.status === "Verified" ? `✓ Verified · ${file.questions} Q` : "Mapped · QA next"}</em></div>)}</article>
+              <article className="panel pipeline-table"><div className="pipeline-header"><span>Content pack</span><span>9477 mapping</span><span>Question design</span><span>Release</span><span>Next gate</span></div>{pdfPipeline.map((file) => { const live = file.status === "Verified"; const mature = file.questions >= 30; return <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.pages} pages · {file.images} figures</small></div></div><b>{file.mapping}</b><p>{file.questions ? `${file.questions} questions · ${mature ? "6 formats" : "MCQ seed"}` : "Question drafting not started"}</p><em className={live ? "live" : "draft"}>{live ? `● Live ${mature ? "v2" : "v1"}` : "○ Draft v0"}</em><small>{mature ? "Monitor student evidence" : live ? "Add structured, data and image variants" : "Draft and source-check questions"}</small></div>; })}</article>
             </> : <article className="panel empty-pipeline"><span>＋</span><h3>No Chemistry source pack yet</h3><p>Upload the coursebook and syllabus to create the same source-to-objective pipeline.</p><button className="primary-button" onClick={() => fileInput.current?.click()}>Upload material</button></article>}
           </section>
         ) : view === "library" ? (
@@ -907,9 +949,9 @@ export default function Home() {
           </section>
         ) : (
           <section className="page-content progress-page">
-            <div className="page-heading"><div><p>Last 30 days</p><h1>Your learning progress</h1><span>Progress is measured by durable mastery, not time spent in the app.</span></div><button className="outline-button">Export report</button></div>
-            <div className="progress-cards"><article><span>Mastery gained</span><b>+18%</b><small>↑ 7% from last month</small></article><article><span>Questions answered</span><b>184</b><small>76% correct first try</small></article><article><span>Weak areas resolved</span><b>7</b><small>3 still need attention</small></article></div>
-            <div className="progress-grid"><article className="panel chart-panel"><div className="panel-heading"><div><h3>Mastery over time</h3><p>Knowledge retained across syllabus objectives</p></div></div><div className="chart"><span className="y y3">80%</span><span className="y y2">60%</span><span className="y y1">40%</span><div className="gridline l3" /><div className="gridline l2" /><div className="gridline l1" /><div className="chart-fill" /><div className="chart-line">●　　　●　　　　●　　　　●　　　　●</div><div className="x-labels"><span>Jul 14</span><span>Jul 21</span><span>Jul 28</span><span>Aug 4</span><span>Today</span></div></div></article><article className="panel skill-panel"><div className="panel-heading"><div><h3>Skill profile</h3><p>What is limiting your next grade</p></div></div>{[["Knowledge recall",78],["Application",61],["Data analysis",58],["Exam language",54],["Image reasoning",72]].map(([label,value]) => <div className="skill-row" key={label as string}><span>{label}</span><div><i style={{ width: `${value}%` }} /></div><b>{value}</b></div>)}</article></div>
+            <div className="page-heading"><div><p>Live learning record</p><h1>Your learning progress</h1><span>Only saved answers, mastery evidence and scheduled reviews appear here.</span></div><button className="primary-button" onClick={() => startSession("practice")}>Continue today’s plan →</button></div>
+            <div className="progress-cards"><article><span>Current mastery</span><b>{average}%</b><small>{totalEvidence} evidence points</small></article><article><span>Questions answered</span><b>{totalAttempts}</b><small>{todayStats.answered} completed today</small></article><article><span>Reviews due</span><b>{dueCount}</b><small>{dueCount ? "Included in today’s plan" : "You are on schedule"}</small></article></div>
+            <div className="progress-grid"><article className="panel evidence-panel"><div className="panel-heading"><div><h3>Mark-point evidence</h3><p>Specific ideas repeatedly missing from structured answers</p></div></div>{learningGaps.length ? <div className="evidence-list">{learningGaps.map((gap) => <button key={`${gap.code}-${gap.point}`} onClick={() => startSession("practice", gap.code)}><span>{gap.code}</span><p>{gap.point}</p><b>{gap.count} missed</b></button>)}</div> : <div className="empty-evidence"><strong>No mark-point gaps yet</strong><p>Complete structured questions and Aster will collect exact omissions here.</p></div>}</article><article className="panel skill-panel"><div className="panel-heading"><div><h3>Skill profile</h3><p>Live averages across verified objectives</p></div></div>{skillProfile.map(([label,value]) => <div className="skill-row" key={label}><span>{label}</span><div><i style={{ width: `${value}%` }} /></div><b>{value}</b></div>)}</article></div>
           </section>
         )}
       </section>

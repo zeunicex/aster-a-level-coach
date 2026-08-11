@@ -27,6 +27,9 @@ export const attempts = sqliteTable("attempts", {
   usedHint: integer("used_hint", { mode: "boolean" }).notNull(),
   difficulty: integer("difficulty").notNull(),
   delta: integer("delta").notNull(),
+  awardedMarks: integer("awarded_marks"),
+  totalMarks: integer("total_marks"),
+  missedPoints: text("missed_points"),
   createdAt: text("created_at").notNull(),
 }, (table) => [index("idx_attempts_user_created").on(table.userId, table.createdAt)]);
 

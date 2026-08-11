@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, pickNextQuestion } from "../lib/adaptive.mjs";
+import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, normalizeReviewDate, pickNextQuestion, reviewLabel } from "../lib/adaptive.mjs";
 
 test("weights independent, confident answers more than hinted or uncertain answers", () => {
   assert.equal(evidenceDelta({ correct: true, confidence: "High", difficulty: 2 }), 4);
@@ -18,6 +18,18 @@ test("keeps mastery confidence separate from the mastery score", () => {
   assert.equal(evidenceConfidence(2), "Low");
   assert.equal(evidenceConfidence(6), "Medium");
   assert.equal(evidenceConfidence(12), "High");
+});
+
+test("uses real review dates and upgrades legacy labels without losing progress", () => {
+  const today = "2026-08-11";
+  assert.equal(dateKey(new Date("2026-08-10T16:30:00Z")), today);
+  assert.equal(normalizeReviewDate("Today", today), today);
+  assert.equal(normalizeReviewDate("Tomorrow", today), "2026-08-12");
+  assert.equal(normalizeReviewDate("3 days", today), "2026-08-14");
+  assert.equal(nextReviewDate({ correct: true, confidence: "High", evidence: 5, today }), "2026-08-25");
+  assert.equal(nextReviewDate({ correct: false, confidence: "High", evidence: 5, today }), "2026-08-12");
+  assert.equal(isReviewDue("2026-08-10", today), true);
+  assert.equal(reviewLabel("2026-08-14", today), "In 3 days");
 });
 
 test("follows a wrong answer with another question on the same objective", () => {
