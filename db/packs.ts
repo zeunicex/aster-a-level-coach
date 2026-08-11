@@ -15,12 +15,16 @@ export type StoredPack = {
 
 export async function seedContentPacks(db: Store) {
   const now = new Date().toISOString();
-  await db.batch(pdfPipeline.map((pack) => {
+  await db.batch(pdfPipeline.flatMap((pack) => {
     const live = pack.status === "Verified";
-    return db.prepare(`INSERT OR IGNORE INTO content_packs
+    const version = live ? (pack.questions >= 30 ? 2 : 1) : 0;
+    const statements = [db.prepare(`INSERT OR IGNORE INTO content_packs
       (pack_order, name, status, version, release_note, updated_at)
       VALUES (?, ?, ?, ?, '', ?)`)
-      .bind(pack.order, pack.name, live ? "Live" : "Draft", live ? (pack.questions >= 30 ? 2 : 1) : 0, now);
+      .bind(pack.order, pack.name, live ? "Live" : "Draft", version, now)];
+    if (live) statements.push(db.prepare(`UPDATE content_packs SET status = 'Live', version = ?, updated_at = ?
+      WHERE pack_order = ? AND updated_by IS NULL AND version < ?`).bind(version, now, pack.order, version));
+    return statements;
   }));
 }
 

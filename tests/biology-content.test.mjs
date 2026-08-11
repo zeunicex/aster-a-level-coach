@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import test from "node:test";
 import {
+  cellCycleQuestions,
   enzymeQuestions,
+  geneExpressionQuestions,
+  mutationQuestions,
   pdfPipeline,
   photosynthesisQuestions,
   practicalSkills,
   respirationQuestions,
   syllabusAreas,
+  techniqueQuestions,
   transportQuestions,
   verifiedBiologyQuestions,
 } from "../lib/biology-content.ts";
@@ -19,14 +23,14 @@ test("complete 9477 map and 17-PDF pipeline use verified source counts", () => {
   assert.equal(pdfPipeline.length, 17);
   assert.equal(pdfPipeline.reduce((sum, file) => sum + file.pages, 0), 852);
   assert.equal(pdfPipeline.reduce((sum, file) => sum + file.images, 0), 1866);
-  assert.equal(pdfPipeline.filter((file) => file.status === "Verified").length, 5);
+  assert.equal(pdfPipeline.filter((file) => file.status === "Verified").length, 9);
 });
 
 test("Enzymes and Cellular Transport are continuous verified packs", () => {
   assert.equal(enzymeQuestions.length, 12);
   assert.equal(transportQuestions.length, 12);
-  assert.equal(verifiedBiologyQuestions.length, 96);
-  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 96);
+  assert.equal(verifiedBiologyQuestions.length, 216);
+  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 216);
 
   for (const code of ["1(g)", "1(h)", "1(i)", "1(j)", "1(k)", "1(l)", "1(p)", "1(q)", "1(r)", "1(s)"]) {
     assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 3, code);
@@ -36,6 +40,27 @@ test("Enzymes and Cellular Transport are continuous verified packs", () => {
     assert.ok(existsSync(`public${question.sourceImage}`), question.sourceImage);
     assert.ok(question.answer >= 0 && question.answer < question.options.length);
     assert.match(question.source, /PDF pp?\./);
+  }
+});
+
+test("four Core 2 packs are mature, source-linked and cover six question formats", () => {
+  const packs = [cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions];
+  assert.deepEqual(packs.map((pack) => pack.length), [30, 30, 30, 30]);
+  for (const pack of packs) {
+    assert.deepEqual(new Set(pack.map((question) => question.format ?? "mcq")), new Set(["mcq", "image", "sequence", "data", "structured", "practical"]));
+    for (const question of pack) {
+      assert.ok(existsSync(`public${question.sourceImage}`), question.sourceImage);
+      assert.match(question.source, /PDF p\./);
+      if (question.markPoints) {
+        assert.equal(question.markPoints.length, question.marks, question.id);
+        assert.ok(question.modelAnswer, question.id);
+      } else {
+        assert.ok(question.answer >= 0 && question.answer < question.options.length, question.id);
+      }
+    }
+  }
+  for (const code of ["2(a)", "2(b)", "2(k)", "2(l)", "2(m)", "2(n)", "2(o)", "2(p)", "2(q)", "2(r)", "2(s)", "2(t)"]) {
+    assert.ok(verifiedBiologyQuestions.some((question) => question.code === code), code);
   }
 });
 

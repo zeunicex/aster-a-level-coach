@@ -1,10 +1,13 @@
 import { biomoleculeQuestions, type BiomoleculeQuestion } from "./biomolecules.ts";
+import { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions } from "./core2-questions.ts";
+
+export { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions };
 
 export type BiologyQuestion = BiomoleculeQuestion;
 
 export const syllabusAreas = [
   { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(u)", outcomes: 21, sourced: 17, verified: 10, status: "In verification", note: "Biomolecules, membranes and enzymes are live. Cell Structure 1(a)–1(d) has no supplied PDF." },
-  { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 0, status: "Mapped", note: "Cell cycle, gene expression, mutations, molecular techniques, regulation and inheritance indexed." },
+  { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 12, status: "In verification", note: "DNA replication, gene expression, molecular techniques, mutation, cancer and cell-cycle outcomes are live across four mature packs." },
   { code: "Core 3", title: "Energy and Equilibrium", range: "3(a)–3(p)", outcomes: 16, sourced: 15, verified: 11, status: "In verification", note: "Energy transformation 3(a)–3(j) and 3(l) is live. The supplied respiration PDF does not cover investigation outcome 3(k); signalling 3(m)–3(p) remains mapped." },
   { code: "Core 4", title: "Biological Evolution", range: "4(a)–4(n)", outcomes: 14, sourced: 14, verified: 0, status: "Mapped", note: "Evolution source indexed and awaiting question validation." },
   { code: "Extension A", title: "Infectious Diseases", range: "A(a)–A(k)", outcomes: 11, sourced: 11, verified: 0, status: "Mapped", note: "Viruses, bacteria, immunity and infectious diseases indexed." },
@@ -24,10 +27,10 @@ export const pdfPipeline = [
   { order: 4, name: "Cellular Transport.pdf", pages: 25, images: 40, mapping: "1(j)–1(l)", status: "Verified", questions: 12 },
   { order: 5, name: "Photosynthesis.pdf", pages: 40, images: 149, mapping: "3(a)–3(e), 3(l)", status: "Verified", questions: 30 },
   { order: 6, name: "Cellular Respiration.pdf", pages: 24, images: 64, mapping: "3(f)–3(j), 3(l)", status: "Verified", questions: 30 },
-  { order: 7, name: "The Cell Cycle.pdf", pages: 60, images: 151, mapping: "Core 2", status: "Mapped", questions: 0 },
-  { order: 8, name: "DNA Replication & Gene Expression.pdf", pages: 52, images: 124, mapping: "Core 2", status: "Mapped", questions: 0 },
-  { order: 9, name: "DNA Mutations & Its Consequences.pdf", pages: 39, images: 86, mapping: "Core 2", status: "Mapped", questions: 0 },
-  { order: 10, name: "Molecular Techniques in DNA Analysis.pdf", pages: 27, images: 38, mapping: "Core 2", status: "Mapped", questions: 0 },
+  { order: 7, name: "The Cell Cycle.pdf", pages: 60, images: 151, mapping: "2(n)–2(o), 2(s)–2(t)", status: "Verified", questions: 30 },
+  { order: 8, name: "DNA Replication & Gene Expression.pdf", pages: 52, images: 124, mapping: "2(a)–2(b)", status: "Verified", questions: 30 },
+  { order: 9, name: "DNA Mutations & Its Consequences.pdf", pages: 39, images: 86, mapping: "2(l)–2(m), 2(p)–2(r)", status: "Verified", questions: 30 },
+  { order: 10, name: "Molecular Techniques in DNA Analysis.pdf", pages: 27, images: 38, mapping: "2(k)", status: "Verified", questions: 30 },
   { order: 11, name: "OCGE in Eukaryotes & Stem Cell.pdf", pages: 96, images: 183, mapping: "Core 1 / Core 2", status: "Mapped", questions: 0 },
   { order: 12, name: "Viruses.pdf", pages: 42, images: 127, mapping: "1(e)–1(f) / Ext A", status: "Mapped", questions: 0 },
   { order: 13, name: "OCGE in Prokaryotes (Bacteria).pdf", pages: 44, images: 77, mapping: "Core 2 / Ext A", status: "Mapped", questions: 0 },
@@ -651,6 +654,10 @@ export const verifiedBiologyQuestions: BiologyQuestion[] = [
   ...transportQuestions,
   ...photosynthesisQuestions,
   ...respirationQuestions,
+  ...cellCycleQuestions,
+  ...geneExpressionQuestions,
+  ...mutationQuestions,
+  ...techniqueQuestions,
 ];
 
 export const verifiedBiologyAnswerKey = Object.fromEntries(

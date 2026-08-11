@@ -79,6 +79,18 @@ const initialMastery: Record<Subject, MasteryItem[]> = {
     { code: "1(q)", topic: "Enzyme investigations", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(r)", topic: "Inhibitor binding", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(s)", topic: "Inhibitor effects", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(a)", topic: "DNA replication", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(b)", topic: "Gene expression", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(k)", topic: "Molecular DNA techniques", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(l)", topic: "Mutation and chromosome aberration", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(m)", topic: "Mutation and genetic disease", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(n)", topic: "Mitotic cell cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(o)", topic: "Mitosis significance and control", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(p)", topic: "Cancer risk factors", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(q)", topic: "Oncogenes and tumour suppressors", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(r)", topic: "Multi-step cancer development", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(s)", topic: "Meiotic cell cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "2(t)", topic: "Meiosis and variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "3(a)", topic: "Energy organelles", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "3(b)", topic: "Photosynthetic spectra", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "3(c)", topic: "Light-dependent reactions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
@@ -472,6 +484,10 @@ export default function Home() {
     { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
     { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "7. The Cell Cycle.pdf", meta: "60 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "8. DNA Replication & Gene Expression.pdf", meta: "52 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "9. DNA Mutations & Its Consequences.pdf", meta: "39 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+    { name: "10. Molecular Techniques in DNA Analysis.pdf", meta: "27 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
     { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -526,6 +542,10 @@ export default function Home() {
         { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "7. The Cell Cycle.pdf", meta: "60 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "8. DNA Replication & Gene Expression.pdf", meta: "52 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "9. DNA Mutations & Its Consequences.pdf", meta: "39 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
+        { name: "10. Molecular Techniques in DNA Analysis.pdf", meta: "27 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
         { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
       ] : [
         { name: "H2 Chemistry course materials", meta: "Awaiting source pack", tag: "Source pack", status: "Needed" },
@@ -1001,7 +1021,7 @@ export default function Home() {
             <div className="files-grid">
               {files.map((file, index) => <article className="file-card" key={file.id ?? `${file.name}-${index}`}><div className="pdf-icon">PDF</div><div><span>{file.tag}</span><strong>{file.name}</strong><small>{file.meta}</small></div><em>{file.status === "Error" ? "Retry" : file.status === "Processing" ? "Mapping" : file.status === "Needed" ? "Needed" : "✓ Ready"}</em>{file.id ? <button aria-label={`Delete ${file.name}`} onClick={() => removeFile(file)}>×</button> : <span />}</article>)}
             </div>
-            <article className="panel mapping-panel"><div className="panel-heading"><div><h3>Source alignment</h3><p>Coverage of the active {subject} syllabus</p></div><b>{subject === "Biology" ? "5 packs verified" : "Source pack needed"}</b></div><div className="coverage-bar"><span style={{ width: subject === "Biology" ? "95%" : "8%" }} /></div><div className="coverage-legend"><span><i className="covered" />1(g)–1(l), 1(p)–1(s), 3(a)–3(j) and 3(l) verified</span><span><i className="partial" />1(a)–1(d) and 3(k) source missing</span><button onClick={() => setView(subject === "Biology" ? "pipeline" : "map")}>{subject === "Biology" ? "Open processing console" : "Review mapping"} →</button></div></article>
+            <article className="panel mapping-panel"><div className="panel-heading"><div><h3>Source alignment</h3><p>Coverage of the active {subject} syllabus</p></div><b>{subject === "Biology" ? `${livePackCount} packs verified` : "Source pack needed"}</b></div><div className="coverage-bar"><span style={{ width: subject === "Biology" ? "95%" : "8%" }} /></div><div className="coverage-legend"><span><i className="covered" />Core 1 foundations, Core 2 genetics sequence and Core 3 energy transformation are live</span><span><i className="partial" />1(a)–1(d) and 3(k) source missing</span><button onClick={() => setView(subject === "Biology" ? "pipeline" : "map")}>{subject === "Biology" ? "Open processing console" : "Review mapping"} →</button></div></article>
           </section>
         ) : (
           <section className="page-content progress-page">
