@@ -5,7 +5,7 @@ export type BiologyQuestion = BiomoleculeQuestion;
 export const syllabusAreas = [
   { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(u)", outcomes: 21, sourced: 17, verified: 10, status: "In verification", note: "Biomolecules, membranes and enzymes are live. Cell Structure 1(a)–1(d) has no supplied PDF." },
   { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 0, status: "Mapped", note: "Cell cycle, gene expression, mutations, molecular techniques, regulation and inheritance indexed." },
-  { code: "Core 3", title: "Energy and Equilibrium", range: "3(a)–3(p)", outcomes: 16, sourced: 16, verified: 0, status: "Mapped", note: "Photosynthesis, cellular respiration and cell communication indexed." },
+  { code: "Core 3", title: "Energy and Equilibrium", range: "3(a)–3(p)", outcomes: 16, sourced: 15, verified: 11, status: "In verification", note: "Energy transformation 3(a)–3(j) and 3(l) is live. The supplied respiration PDF does not cover investigation outcome 3(k); signalling 3(m)–3(p) remains mapped." },
   { code: "Core 4", title: "Biological Evolution", range: "4(a)–4(n)", outcomes: 14, sourced: 14, verified: 0, status: "Mapped", note: "Evolution source indexed and awaiting question validation." },
   { code: "Extension A", title: "Infectious Diseases", range: "A(a)–A(k)", outcomes: 11, sourced: 11, verified: 0, status: "Mapped", note: "Viruses, bacteria, immunity and infectious diseases indexed." },
   { code: "Extension B", title: "Climate Change", range: "B(a)–B(i)", outcomes: 9, sourced: 9, verified: 0, status: "Mapped", note: "Climate change source indexed and awaiting question validation." },
@@ -22,8 +22,8 @@ export const pdfPipeline = [
   { order: 2, name: "Biomolecules.pdf", pages: 94, images: 206, mapping: "1(g)–1(i)", status: "Verified", questions: 12 },
   { order: 3, name: "Enzymes.pdf", pages: 38, images: 71, mapping: "1(p)–1(s)", status: "Verified", questions: 12 },
   { order: 4, name: "Cellular Transport.pdf", pages: 25, images: 40, mapping: "1(j)–1(l)", status: "Verified", questions: 12 },
-  { order: 5, name: "Photosynthesis.pdf", pages: 40, images: 149, mapping: "Core 3", status: "Mapped", questions: 0 },
-  { order: 6, name: "Cellular Respiration.pdf", pages: 24, images: 64, mapping: "Core 3", status: "Mapped", questions: 0 },
+  { order: 5, name: "Photosynthesis.pdf", pages: 40, images: 149, mapping: "3(a)–3(e), 3(l)", status: "Verified", questions: 18 },
+  { order: 6, name: "Cellular Respiration.pdf", pages: 24, images: 64, mapping: "3(f)–3(j), 3(l)", status: "Verified", questions: 18 },
   { order: 7, name: "The Cell Cycle.pdf", pages: 60, images: 151, mapping: "Core 2", status: "Mapped", questions: 0 },
   { order: 8, name: "DNA Replication & Gene Expression.pdf", pages: 52, images: 124, mapping: "Core 2", status: "Mapped", questions: 0 },
   { order: 9, name: "DNA Mutations & Its Consequences.pdf", pages: 39, images: 86, mapping: "Core 2", status: "Mapped", questions: 0 },
@@ -236,10 +236,234 @@ export const transportQuestions: BiologyQuestion[] = [
   },
 ];
 
+export const photosynthesisQuestions: BiologyQuestion[] = [
+  {
+    id: "bio-photo-granum", code: "3(a)", eyebrow: "Verified source · organelle identification", objective: "3(a) Chloroplast and mitochondrion components", marks: 1, skill: "Knowledge", difficulty: 1,
+    prompt: "Which chloroplast structure is a stack of thylakoids?", options: ["Stroma", "Granum", "Crista", "Matrix"], answer: 1,
+    hint: "Use the singular term for one stack.", misconception: "Chloroplast component identification", explanation: "A granum is a stack of thylakoids. The surrounding fluid is the stroma.",
+    source: "Photosynthesis.pdf · PDF p.9 · printed p.9", sourceImage: "/materials/photosynthesis/page-9.jpg", sourcePage: 9,
+  },
+  {
+    id: "bio-photo-stroma", code: "3(a)", eyebrow: "Verified source · location", objective: "3(a) Chloroplast and mitochondrion components", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "A micrograph shows an enzyme-rich fluid surrounding grana. Which region is this?", options: ["Thylakoid lumen", "Intermembrane space", "Stroma", "Cytosol"], answer: 2,
+    hint: "The Calvin cycle occurs in this chloroplast compartment.", misconception: "Stroma versus thylakoid space", explanation: "The stroma is the aqueous region inside the chloroplast inner membrane that surrounds the thylakoids and contains Calvin-cycle enzymes.",
+    source: "Photosynthesis.pdf · PDF p.9 · printed p.9", sourceImage: "/materials/photosynthesis/page-9.jpg", sourcePage: 9,
+  },
+  {
+    id: "bio-photo-organelle-discriminate", code: "3(a)", eyebrow: "Verified source · micrograph discrimination", objective: "3(a) Chloroplast and mitochondrion components", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Which feature identifies a mitochondrion rather than a chloroplast in an electron micrograph?", options: ["A double membrane", "Internal DNA", "An aqueous internal matrix", "Cristae formed by folds of the inner membrane"], answer: 3,
+    hint: "Both organelles share several features; choose the distinctive internal membrane arrangement.", misconception: "Chloroplast–mitochondrion discrimination", explanation: "Cristae are folds of the inner mitochondrial membrane. Chloroplasts instead contain thylakoids arranged into grana.",
+    source: "Cellular Respiration.pdf · PDF p.6 · printed p.44", sourceImage: "/materials/respiration/page-6.jpg", sourcePage: 44,
+  },
+  {
+    id: "bio-photo-action-spectrum", code: "3(b)", eyebrow: "Verified source · graph definition", objective: "3(b) Photosynthetic spectra", marks: 1, skill: "Knowledge", difficulty: 1,
+    prompt: "What does an action spectrum show?", options: ["Pigment concentration at each wavelength", "Rate of photosynthesis at different wavelengths", "Temperature of light absorbed", "ATP yield at different carbon dioxide concentrations"], answer: 1,
+    hint: "It measures a biological response, not pigment absorbance.", misconception: "Action versus absorption spectrum", explanation: "An action spectrum plots the rate of photosynthesis against wavelength, whereas an absorption spectrum plots light absorbed by pigments.",
+    source: "Photosynthesis.pdf · PDF p.36 · printed p.34", sourceImage: "/materials/photosynthesis/page-36.jpg", sourcePage: 34,
+  },
+  {
+    id: "bio-photo-spectra-match", code: "3(b)", eyebrow: "Verified source · explain evidence", objective: "3(b) Photosynthetic spectra", marks: 2, skill: "Exam technique", difficulty: 2,
+    prompt: "Why does the action spectrum broadly match the combined absorption spectra of photosynthetic pigments?", options: ["Only green light reaches leaves", "All wavelengths contain equal energy", "Absorbed light supplies energy for photoactivation and photophosphorylation", "Carbon dioxide absorbs red light"], answer: 2,
+    hint: "Link pigment absorption to the light-dependent reactions.", misconception: "Relationship between absorption and action spectra", explanation: "Wavelengths absorbed strongly provide more usable light energy for the light-dependent reactions, so they generally support higher photosynthetic rates.",
+    source: "Photosynthesis.pdf · PDF p.36 · printed p.34", sourceImage: "/materials/photosynthesis/page-36.jpg", sourcePage: 34,
+  },
+  {
+    id: "bio-photo-accessory-pigments", code: "3(b)", eyebrow: "Verified source · functional inference", objective: "3(b) Photosynthetic spectra", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "What is the main advantage of having chlorophyll a, chlorophyll b and carotenoids?", options: ["They prevent all light absorption", "They make every photon red", "They remove the need for reaction centres", "Together they absorb a wider range of wavelengths"], answer: 3,
+    hint: "Compare the different peaks in their absorption spectra.", misconception: "Role of accessory pigments", explanation: "Different pigments absorb most strongly at different wavelengths, broadening the usable spectrum and transferring captured energy toward reaction centres.",
+    source: "Photosynthesis.pdf · PDF p.16 · printed p.16", sourceImage: "/materials/photosynthesis/page-16.jpg", sourcePage: 16,
+  },
+  {
+    id: "bio-photo-photolysis", code: "3(c)", eyebrow: "Verified source · electron replacement", objective: "3(c) Light-dependent reactions", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "What is the direct role of photolysis of water in non-cyclic photophosphorylation?", options: ["It replaces electrons lost from photosystem II and releases protons and oxygen", "It fixes carbon dioxide", "It regenerates RuBP", "It reduces pyruvate"], answer: 0,
+    hint: "Follow the electrons leaving P680.", misconception: "Role of water in the light-dependent reactions", explanation: "Light splits water into electrons, protons and oxygen. The electrons replace those lost from photosystem II; oxygen is released as a by-product.",
+    source: "Photosynthesis.pdf · PDF p.23 · printed p.23", sourceImage: "/materials/photosynthesis/page-23.jpg", sourcePage: 23,
+  },
+  {
+    id: "bio-photo-nadp", code: "3(c)", eyebrow: "Verified source · electron flow", objective: "3(c) Light-dependent reactions", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "At the end of non-cyclic electron flow, which molecule accepts electrons and hydrogen to form reducing power for the Calvin cycle?", options: ["ADP", "RuBP", "NADP+", "Oxygen"], answer: 2,
+    hint: "The reduced product carries electrons into the Calvin cycle.", misconception: "Final electron acceptor in photosynthesis", explanation: "NADP+ is reduced to NADPH, which supplies electrons and hydrogen for reduction reactions in the Calvin cycle.",
+    source: "Photosynthesis.pdf · PDF p.23 · printed p.23", sourceImage: "/materials/photosynthesis/page-23.jpg", sourcePage: 23,
+  },
+  {
+    id: "bio-photo-atp-synthase", code: "3(c)", eyebrow: "Verified source · energy conversion", objective: "3(c) Light-dependent reactions", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "How is light energy converted into chemical energy as ATP at the thylakoid membrane?", options: ["Rubisco transfers phosphate directly to ADP", "Electron transport builds a proton gradient whose flow through ATP synthase drives ATP formation", "Oxygen phosphorylates glucose", "NADPH hydrolysis pumps carbon dioxide"], answer: 1,
+    hint: "Connect electron transport, a proton gradient and ATP synthase.", misconception: "Coupling electron transport to ATP synthesis", explanation: "Energy released as electrons pass along carriers pumps protons into the thylakoid space. Their return through ATP synthase drives phosphorylation of ADP.",
+    source: "Photosynthesis.pdf · PDF p.23 · printed p.23", sourceImage: "/materials/photosynthesis/page-23.jpg", sourcePage: 23,
+  },
+  {
+    id: "bio-photo-carbon-fixation", code: "3(d)", eyebrow: "Verified source · Calvin cycle phase", objective: "3(d) Calvin cycle", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "Which event occurs during carbon dioxide fixation in the Calvin cycle?", options: ["Triose phosphate is oxidised to carbon dioxide", "Water is split by light", "Pyruvate enters the matrix", "Rubisco catalyses the combination of carbon dioxide with RuBP"], answer: 3,
+    hint: "Identify both the carbon dioxide acceptor and the enzyme.", misconception: "Carbon-fixation step", explanation: "Rubisco catalyses addition of carbon dioxide to the five-carbon acceptor RuBP, producing an unstable six-carbon intermediate that forms PGA.",
+    source: "Photosynthesis.pdf · PDF p.28 · printed p.28", sourceImage: "/materials/photosynthesis/page-28.jpg", sourcePage: 28,
+  },
+  {
+    id: "bio-photo-pga-reduction", code: "3(d)", eyebrow: "Verified source · resource use", objective: "3(d) Calvin cycle", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Which products of the light-dependent reactions are required to reduce PGA to triose phosphate?", options: ["Oxygen and water", "ATP and NADPH", "Carbon dioxide and RuBP", "ADP and NADP+"], answer: 1,
+    hint: "One provides energy; the other provides reducing power.", misconception: "Link between light-dependent reactions and PGA reduction", explanation: "ATP supplies energy and NADPH supplies electrons and hydrogen for conversion of PGA into triose phosphate.",
+    source: "Photosynthesis.pdf · PDF p.28 · printed p.28", sourceImage: "/materials/photosynthesis/page-28.jpg", sourcePage: 28,
+  },
+  {
+    id: "bio-photo-rubp-regeneration", code: "3(d)", eyebrow: "Verified source · cycle continuity", objective: "3(d) Calvin cycle", marks: 2, skill: "Exam technique", difficulty: 2,
+    prompt: "Why must most triose phosphate remain in the Calvin cycle?", options: ["To release oxygen", "To absorb photons", "To regenerate RuBP so carbon dioxide fixation can continue", "To form acetyl CoA"], answer: 2,
+    hint: "A cycle must restore its starting carbon dioxide acceptor.", misconception: "Purpose of RuBP regeneration", explanation: "Most triose phosphate is rearranged using ATP to regenerate RuBP, allowing further carbon dioxide molecules to be fixed.",
+    source: "Photosynthesis.pdf · PDF p.28 · printed p.28", sourceImage: "/materials/photosynthesis/page-28.jpg", sourcePage: 28,
+  },
+  {
+    id: "bio-photo-light-plateau", code: "3(e)", eyebrow: "Verified source · limiting factor graph", objective: "3(e) Photosynthesis investigations", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why can a photosynthesis rate curve plateau as light intensity increases?", options: ["Light has destroyed all water", "Photosynthesis no longer needs enzymes", "Another factor such as carbon dioxide concentration or temperature has become limiting", "Chlorophyll stops absorbing every wavelength"], answer: 2,
+    hint: "At a plateau, the independent variable is no longer the limiting factor.", misconception: "Interpreting a limiting-factor plateau", explanation: "Once light is sufficient, increasing it further cannot raise the rate if carbon dioxide availability, temperature or another factor limits the process.",
+    source: "Photosynthesis.pdf · PDF p.37 · printed p.35", sourceImage: "/materials/photosynthesis/page-37.jpg", sourcePage: 35,
+  },
+  {
+    id: "bio-photo-temperature", code: "3(e)", eyebrow: "Verified source · explain a curve", objective: "3(e) Photosynthesis investigations", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "Why does photosynthetic rate fall steeply above the optimum temperature?", options: ["Calvin-cycle enzymes lose functional shape as bonds maintaining their structure are disrupted", "Light intensity becomes zero", "Carbon dioxide changes into oxygen", "Thylakoids leave the chloroplast"], answer: 0,
+    hint: "The Calvin cycle is enzyme-catalysed.", misconception: "Temperature effect on photosynthesis", explanation: "Above the optimum, denaturation changes enzyme active sites, reducing Calvin-cycle reaction rates and therefore overall photosynthesis.",
+    source: "Photosynthesis.pdf · PDF p.38 · printed p.36", sourceImage: "/materials/photosynthesis/page-38.jpg", sourcePage: 36,
+  },
+  {
+    id: "bio-photo-investigation-control", code: "3(e)", eyebrow: "Verified source · practical design", objective: "3(e) Photosynthesis investigations", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "When investigating carbon dioxide concentration, which design best isolates its effect on photosynthetic rate?", options: ["Change carbon dioxide and temperature together", "Use different plant species at every concentration", "Measure once without acclimatisation", "Vary carbon dioxide while controlling light intensity, temperature and plant material"], answer: 3,
+    hint: "Only the independent variable should change systematically.", misconception: "Controls in a photosynthesis investigation", explanation: "Holding light, temperature and plant material constant makes carbon dioxide concentration the only systematic cause of any rate difference.",
+    source: "Photosynthesis.pdf · PDF p.38 · printed p.36", sourceImage: "/materials/photosynthesis/page-38.jpg", sourcePage: 36,
+  },
+  {
+    id: "bio-photo-chemiosmosis-direction", code: "3(l)", eyebrow: "Verified source · proton direction", objective: "3(l) Chemiosmosis", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "During photosynthetic chemiosmosis, in which direction do protons move through ATP synthase?", options: ["Stroma to thylakoid space", "Thylakoid space to stroma", "Cytosol to nucleus", "Matrix to intermembrane space"], answer: 1,
+    hint: "Protons return down the gradient built across the thylakoid membrane.", misconception: "Direction of photosynthetic proton flow", explanation: "Protons accumulate in the thylakoid space and diffuse back into the stroma through ATP synthase.",
+    source: "Photosynthesis.pdf · PDF p.23 · printed p.23", sourceImage: "/materials/photosynthesis/page-23.jpg", sourcePage: 23,
+  },
+  {
+    id: "bio-photo-proton-motive", code: "3(l)", eyebrow: "Verified source · energy store", objective: "3(l) Chemiosmosis", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Where is the immediate energy used by chloroplast ATP synthase stored?", options: ["In oxygen gas", "In the primary structure of rubisco", "In carbon dioxide", "In the electrochemical proton gradient across the thylakoid membrane"], answer: 3,
+    hint: "It is a difference across a membrane.", misconception: "Energy source for ATP synthase", explanation: "The proton gradient stores electrochemical potential energy; proton flow down that gradient powers ATP synthesis.",
+    source: "Photosynthesis.pdf · PDF p.23 · printed p.23", sourceImage: "/materials/photosynthesis/page-23.jpg", sourcePage: 23,
+  },
+  {
+    id: "bio-photo-cyclic-chemiosmosis", code: "3(l)", eyebrow: "Verified source · pathway comparison", objective: "3(l) Chemiosmosis", marks: 2, skill: "Application", difficulty: 3,
+    prompt: "What is shared by cyclic and non-cyclic photophosphorylation?", options: ["Electron transport creates a proton gradient that drives ATP synthesis", "Both release oxygen from water", "Both reduce NADP+", "Both require photosystem II"], answer: 0,
+    hint: "Choose the mechanism common to ATP formation in both pathways.", misconception: "Cyclic versus non-cyclic photophosphorylation", explanation: "Both routes use electron transport to build a proton gradient and chemiosmosis through ATP synthase. Cyclic flow does not use photosystem II, split water or produce NADPH.",
+    source: "Photosynthesis.pdf · PDF p.23 · printed p.23", sourceImage: "/materials/photosynthesis/page-23.jpg", sourcePage: 23,
+  },
+];
+
+export const respirationQuestions: BiologyQuestion[] = [
+  {
+    id: "bio-resp-glycolysis-location", code: "3(f)", eyebrow: "Verified source · location", objective: "3(f) Glycolysis", marks: 1, skill: "Knowledge", difficulty: 1,
+    prompt: "Where does glycolysis occur?", options: ["Mitochondrial matrix", "Inner mitochondrial membrane", "Cytosol", "Intermembrane space"], answer: 2,
+    hint: "This stage can continue without a mitochondrion.", misconception: "Location of glycolysis", explanation: "Glycolysis occurs in the cytosol and does not directly require oxygen.",
+    source: "Cellular Respiration.pdf · PDF p.11 · printed p.49", sourceImage: "/materials/respiration/page-11.jpg", sourcePage: 49,
+  },
+  {
+    id: "bio-resp-glycolysis-products", code: "3(f)", eyebrow: "Verified source · product accounting", objective: "3(f) Glycolysis", marks: 2, skill: "Knowledge", difficulty: 2,
+    prompt: "What are the net products of glycolysis per glucose molecule?", options: ["Two acetyl CoA, two carbon dioxide and two ATP", "Two pyruvate, two ATP and two reduced NAD", "Six carbon dioxide and no ATP", "One pyruvate, four ATP and oxygen"], answer: 1,
+    hint: "Distinguish net ATP from the total formed during the payoff phase.", misconception: "Net products of glycolysis", explanation: "One glucose yields two pyruvate, a net gain of two ATP and two reduced NAD molecules.",
+    source: "Cellular Respiration.pdf · PDF p.11 · printed p.49", sourceImage: "/materials/respiration/page-11.jpg", sourcePage: 49,
+  },
+  {
+    id: "bio-resp-glycolysis-investment", code: "3(f)", eyebrow: "Verified source · mechanism", objective: "3(f) Glycolysis", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why is ATP used early in glycolysis to phosphorylate the hexose?", options: ["To release carbon dioxide immediately", "To reduce oxygen", "To move glucose into the mitochondrion", "To make the hexose more reactive before it is split and oxidised"], answer: 3,
+    hint: "This is called the energy-investment phase.", misconception: "Purpose of early phosphorylation in glycolysis", explanation: "ATP phosphorylation raises the sugar's energy and reactivity, preparing it for splitting and subsequent oxidation that yields ATP and reduced NAD.",
+    source: "Cellular Respiration.pdf · PDF p.11 · printed p.49", sourceImage: "/materials/respiration/page-11.jpg", sourcePage: 49,
+  },
+  {
+    id: "bio-resp-link-products", code: "3(g)", eyebrow: "Verified source · link reaction", objective: "3(g) Link reaction and Krebs cycle", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "What is formed when one pyruvate undergoes the link reaction?", options: ["Acetyl CoA, carbon dioxide and reduced NAD", "Lactate, oxygen and ATP", "RuBP and PGA", "Glucose and reduced FAD"], answer: 0,
+    hint: "The reaction includes decarboxylation and dehydrogenation.", misconception: "Products of the link reaction", explanation: "Pyruvate is decarboxylated and oxidised, producing acetyl CoA, carbon dioxide and reduced NAD in the mitochondrial matrix.",
+    source: "Cellular Respiration.pdf · PDF p.12 · printed p.50", sourceImage: "/materials/respiration/page-12.jpg", sourcePage: 50,
+  },
+  {
+    id: "bio-resp-krebs-products", code: "3(g)", eyebrow: "Verified source · cycle accounting", objective: "3(g) Link reaction and Krebs cycle", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Which set is produced from one turn of the Krebs cycle per acetyl CoA?", options: ["Two pyruvate and two ATP", "One glucose and six oxygen", "Three reduced NAD, one reduced FAD, one ATP and two carbon dioxide", "One RuBP and one triose phosphate"], answer: 2,
+    hint: "The notes show values per glucose after two turns; halve them.", misconception: "Products per turn of the Krebs cycle", explanation: "Each acetyl CoA yields three reduced NAD, one reduced FAD, one ATP by substrate-level phosphorylation and two carbon dioxide.",
+    source: "Cellular Respiration.pdf · PDF p.14 · printed p.52", sourceImage: "/materials/respiration/page-14.jpg", sourcePage: 52,
+  },
+  {
+    id: "bio-resp-dehydrogenation", code: "3(g)", eyebrow: "Verified source · exam language", objective: "3(g) Link reaction and Krebs cycle", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "What do decarboxylation and dehydrogenation accomplish during the link reaction and Krebs cycle?", options: ["They add carbon dioxide and oxidise NADH", "They remove carbon dioxide and transfer hydrogen/electrons to NAD+ or FAD", "They split water to release oxygen", "They regenerate RuBP"], answer: 1,
+    hint: "Explain both terms using their removed products.", misconception: "Meaning of decarboxylation and dehydrogenation", explanation: "Decarboxylation removes carbon as carbon dioxide; dehydrogenation oxidises intermediates and reduces electron carriers NAD+ or FAD.",
+    source: "Cellular Respiration.pdf · PDF pp.12–14 · printed pp.50–52", sourceImage: "/materials/respiration/page-14.jpg", sourcePage: 52,
+  },
+  {
+    id: "bio-resp-oxygen", code: "3(h)", eyebrow: "Verified source · final acceptor", objective: "3(h) Oxidative phosphorylation", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "What is oxygen's role in oxidative phosphorylation?", options: ["It donates electrons to reduced NAD", "It pumps protons directly", "It phosphorylates ADP", "It is the final electron acceptor and is reduced to water"], answer: 3,
+    hint: "Without this acceptor, electron flow through the chain stops.", misconception: "Role of oxygen in respiration", explanation: "Oxygen accepts electrons and protons at the end of the electron transport chain, forming water and allowing continued carrier oxidation.",
+    source: "Cellular Respiration.pdf · PDF p.15 · printed p.53", sourceImage: "/materials/respiration/page-15.jpg", sourcePage: 53,
+  },
+  {
+    id: "bio-resp-etc-pumping", code: "3(h)", eyebrow: "Verified source · energy coupling", objective: "3(h) Oxidative phosphorylation", marks: 3, skill: "Exam technique", difficulty: 2,
+    prompt: "How does electron flow along the mitochondrial electron transport chain lead to ATP synthesis?", options: ["Released energy pumps protons into the intermembrane space, creating a gradient used by ATP synthase", "Electrons combine directly with ADP", "Carbon dioxide drives ATP synthase", "Pyruvate diffuses through ATP synthase"], answer: 0,
+    hint: "Follow energy from electrons to a transmembrane gradient.", misconception: "Coupling the ETC to ATP synthesis", explanation: "Energy released by electron transfer pumps protons from the matrix into the intermembrane space. Their return through ATP synthase powers phosphorylation of ADP.",
+    source: "Cellular Respiration.pdf · PDF p.15 · printed p.53", sourceImage: "/materials/respiration/page-15.jpg", sourcePage: 53,
+  },
+  {
+    id: "bio-resp-uncoupler", code: "3(h)", eyebrow: "Verified source · unfamiliar context", objective: "3(h) Oxidative phosphorylation", marks: 3, skill: "Application", difficulty: 3,
+    prompt: "A chemical makes the inner mitochondrial membrane freely permeable to protons. What is the most direct effect?", options: ["More carbon dioxide is fixed", "Glycolysis stops instantly because glucose vanishes", "The proton gradient collapses and ATP synthesis by oxidative phosphorylation falls", "Oxygen is converted to glucose"], answer: 2,
+    hint: "ATP synthase depends on a proton-motive force.", misconception: "Importance of inner-membrane proton impermeability", explanation: "Proton leakage dissipates the electrochemical gradient, uncoupling electron transport from ATP synthesis even if electron flow continues.",
+    source: "Cellular Respiration.pdf · PDF p.18 · printed p.56", sourceImage: "/materials/respiration/page-18.jpg", sourcePage: 56,
+  },
+  {
+    id: "bio-resp-anaerobic-yield", code: "3(i)", eyebrow: "Verified source · ATP yield", objective: "3(i) Anaerobic respiration", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why is ATP yield small when oxygen is unavailable?", options: ["Glucose cannot enter cells", "Only substrate-level phosphorylation in glycolysis continues; oxidative phosphorylation stops", "ATP synthase moves to the nucleus", "Fermentation consumes all ATP"], answer: 1,
+    hint: "Identify which ATP-producing process requires oxygen indirectly.", misconception: "Low ATP yield in anaerobic conditions", explanation: "Without oxygen as the final electron acceptor, the electron transport chain and oxidative phosphorylation stop. Glycolysis supplies only a net two ATP per glucose.",
+    source: "Cellular Respiration.pdf · PDF pp.20–21 · printed pp.58–59", sourceImage: "/materials/respiration/page-20.jpg", sourcePage: 58,
+  },
+  {
+    id: "bio-resp-yeast-products", code: "3(i)", eyebrow: "Verified source · pathway products", objective: "3(i) Anaerobic respiration", marks: 1, skill: "Knowledge", difficulty: 1,
+    prompt: "Which products are formed from pyruvate during anaerobic respiration in yeast?", options: ["Lactate only", "Acetyl CoA and oxygen", "RuBP and carbon dioxide", "Ethanol and carbon dioxide"], answer: 3,
+    hint: "Yeast carries out alcoholic fermentation.", misconception: "Yeast versus mammalian anaerobic products", explanation: "Yeast decarboxylates pyruvate to ethanal and then reduces ethanal to ethanol, releasing carbon dioxide.",
+    source: "Cellular Respiration.pdf · PDF p.20 · printed p.58", sourceImage: "/materials/respiration/page-20.jpg", sourcePage: 58,
+  },
+  {
+    id: "bio-resp-muscle-product", code: "3(i)", eyebrow: "Verified source · tissue context", objective: "3(i) Anaerobic respiration", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "What happens to pyruvate in mammalian muscle when oxygen supply is insufficient?", options: ["It is reduced to lactate", "It is decarboxylated to ethanol", "It enters the Calvin cycle", "It releases oxygen"], answer: 0,
+    hint: "Mammalian muscle uses a one-step fermentation pathway.", misconception: "Mammalian anaerobic pathway", explanation: "Pyruvate accepts hydrogen and electrons from reduced NAD and is reduced to lactate, regenerating NAD+.",
+    source: "Cellular Respiration.pdf · PDF p.21 · printed p.59", sourceImage: "/materials/respiration/page-21.jpg", sourcePage: 59,
+  },
+  {
+    id: "bio-resp-nad-regeneration", code: "3(j)", eyebrow: "Verified source · central purpose", objective: "3(j) NAD regeneration", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "What is the central significance of forming ethanol or lactate during anaerobic respiration?", options: ["To produce oxygen", "To make glucose directly", "To oxidise reduced NAD and regenerate NAD+ for glycolysis", "To create a mitochondrial proton gradient"], answer: 2,
+    hint: "Glycolysis needs an oxidised electron carrier.", misconception: "Purpose of fermentation end products", explanation: "Reduction of ethanal or pyruvate transfers electrons from reduced NAD, regenerating NAD+ so glycolysis and its small ATP yield can continue.",
+    source: "Cellular Respiration.pdf · PDF pp.20–21 · printed pp.58–59", sourceImage: "/materials/respiration/page-21.jpg", sourcePage: 59,
+  },
+  {
+    id: "bio-resp-no-nad", code: "3(j)", eyebrow: "Verified source · consequence", objective: "3(j) NAD regeneration", marks: 3, skill: "Application", difficulty: 3,
+    prompt: "What would happen first if reduced NAD could not be reoxidised during anaerobic conditions?", options: ["The Calvin cycle would accelerate", "Glycolytic dehydrogenation would stop as NAD+ became unavailable, so ATP production would cease", "Oxygen would be released", "More acetyl CoA would enter the Krebs cycle"], answer: 1,
+    hint: "Track the finite pool of NAD+ in the cytosol.", misconception: "Dependence of glycolysis on NAD+ recycling", explanation: "NAD+ is required to accept electrons during glycolysis. Without regeneration, it is depleted, glycolysis stops and no further substrate-level ATP is produced.",
+    source: "Cellular Respiration.pdf · PDF p.20 · printed p.58", sourceImage: "/materials/respiration/page-20.jpg", sourcePage: 58,
+  },
+  {
+    id: "bio-resp-fermentation-compare", code: "3(j)", eyebrow: "Verified source · compare pathways", objective: "3(j) NAD regeneration", marks: 2, skill: "Exam technique", difficulty: 2,
+    prompt: "Which distinction between yeast and mammalian muscle fermentation is correct?", options: ["Only muscle regenerates NAD+", "Only yeast uses pyruvate", "Only muscle can continue glycolysis", "Yeast releases carbon dioxide while lactate formation does not"], answer: 3,
+    hint: "Compare the number of carbon atoms in the products.", misconception: "Comparing alcoholic and lactate fermentation", explanation: "Yeast decarboxylates three-carbon pyruvate before ethanol forms, releasing carbon dioxide. Muscle reduces pyruvate directly to three-carbon lactate.",
+    source: "Cellular Respiration.pdf · PDF pp.20–21 · printed pp.58–59", sourceImage: "/materials/respiration/page-20.jpg", sourcePage: 58,
+  },
+  {
+    id: "bio-resp-chemiosmosis-direction", code: "3(l)", eyebrow: "Verified source · proton direction", objective: "3(l) Chemiosmosis", marks: 2, skill: "Knowledge", difficulty: 1,
+    prompt: "During mitochondrial chemiosmosis, in which direction do protons flow through ATP synthase?", options: ["Intermembrane space to matrix", "Matrix to intermembrane space", "Cytosol to matrix", "Thylakoid space to stroma"], answer: 0,
+    hint: "They return down the gradient created by the electron transport chain.", misconception: "Direction of mitochondrial proton flow", explanation: "The ETC pumps protons into the intermembrane space; they then diffuse back into the matrix through ATP synthase.",
+    source: "Cellular Respiration.pdf · PDF p.18 · printed p.56", sourceImage: "/materials/respiration/page-18.jpg", sourcePage: 56,
+  },
+  {
+    id: "bio-resp-inner-membrane", code: "3(l)", eyebrow: "Verified source · membrane property", objective: "3(l) Chemiosmosis", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why must the inner mitochondrial membrane be largely impermeable to protons?", options: ["To prevent oxygen entering", "To keep pyruvate in the cytosol", "To maintain the proton gradient so return flow is coupled to ATP synthase", "To stop the Krebs cycle"], answer: 2,
+    hint: "Uncontrolled proton leakage would bypass one protein.", misconception: "Membrane requirement for chemiosmosis", explanation: "Proton impermeability preserves the electrochemical gradient and channels proton return through ATP synthase rather than allowing uncoupled leakage.",
+    source: "Cellular Respiration.pdf · PDF p.18 · printed p.56", sourceImage: "/materials/respiration/page-18.jpg", sourcePage: 56,
+  },
+  {
+    id: "bio-resp-photo-compare", code: "3(l)", eyebrow: "Verified source · integrate processes", objective: "3(l) Chemiosmosis", marks: 3, skill: "Exam technique", difficulty: 3,
+    prompt: "What principle is shared by chemiosmosis in chloroplasts and mitochondria?", options: ["Both use carbon dioxide as the final electron acceptor", "Electron transport builds a proton gradient across a membrane and proton return through ATP synthase makes ATP", "Both split water to replace electrons", "Both pump protons into the cytosol"], answer: 1,
+    hint: "Ignore the different electron donors and acceptors; identify the common coupling mechanism.", misconception: "Shared chemiosmotic mechanism", explanation: "In both organelles, electron-transfer energy pumps protons across an energy-transducing membrane, and downhill proton flow through ATP synthase drives ATP production.",
+    source: "Cellular Respiration.pdf · PDF p.18 · printed p.56", sourceImage: "/materials/respiration/page-18.jpg", sourcePage: 56,
+  },
+];
+
 export const verifiedBiologyQuestions: BiologyQuestion[] = [
   ...biomoleculeQuestions,
   ...enzymeQuestions,
   ...transportQuestions,
+  ...photosynthesisQuestions,
+  ...respirationQuestions,
 ];
 
 export const verifiedBiologyAnswerKey = Object.fromEntries(

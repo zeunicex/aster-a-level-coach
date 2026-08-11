@@ -54,6 +54,17 @@ const initialMastery: Record<Subject, MasteryItem[]> = {
     { code: "1(q)", topic: "Enzyme investigations", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(r)", topic: "Inhibitor binding", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
     { code: "1(s)", topic: "Inhibitor effects", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(a)", topic: "Energy organelles", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(b)", topic: "Photosynthetic spectra", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(c)", topic: "Light-dependent reactions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(d)", topic: "Calvin cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(e)", topic: "Photosynthesis investigations", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(f)", topic: "Glycolysis", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(g)", topic: "Link reaction and Krebs cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(h)", topic: "Oxidative phosphorylation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(i)", topic: "Anaerobic respiration", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(j)", topic: "NAD regeneration", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
+    { code: "3(l)", topic: "Chemiosmosis", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
   ],
   Chemistry: [
     { code: "2.1", topic: "Atomic structure", score: 82, note: "Secure", due: "6 days", evidence: 12, confidence: "High", knowledge: 91, application: 79, exam: 76 },
@@ -424,6 +435,8 @@ export default function Home() {
     { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
     { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
     { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+    { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
+    { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
     { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
   ]);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -446,6 +459,8 @@ export default function Home() {
         { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 12 verified questions", tag: "Verified pack", status: "Ready" },
+        { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
+        { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 18 verified questions", tag: "Verified pack", status: "Ready" },
         { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
       ] : [
         { name: "H2 Chemistry course materials", meta: "Awaiting source pack", tag: "Source pack", status: "Needed" },
@@ -740,10 +755,10 @@ export default function Home() {
 
             <div className="hero-grid">
               <article className="focus-card">
-                <div className="focus-top"><span>{subject === "Biology" ? "3 VERIFIED BIOLOGY PACKS" : "YOUR NEXT SESSION"}</span><em>Personalised</em></div>
+                <div className="focus-top"><span>{subject === "Biology" ? "5 VERIFIED BIOLOGY PACKS" : "YOUR NEXT SESSION"}</span><em>Personalised</em></div>
                 <h2>{subject === "Biology" ? "Build mastery from your own Biology notes" : `Strengthen ${weakTopic.topic.toLowerCase()}`}</h2>
-                <p>{subject === "Biology" ? "Biomolecules, enzymes and cellular transport now form one continuous adaptive path. Every answer updates both mastery and the next question." : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
-                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {subject === "Biology" ? "36 verified questions" : "5 evidence points"}</span><span>▧ {subject === "Biology" ? "21 real source pages" : "Live adaptive path"}</span></div>
+                <p>{subject === "Biology" ? "Five verified packs now form one continuous path from biomolecules to energy transformation. Every answer updates both mastery and the next question." : "Today mixes retrieval, explanation and unfamiliar applications around your weakest evidence."}</p>
+                <div className="session-tags"><span>◷ {minutes} min</span><span>◎ {subject === "Biology" ? "72 verified questions" : "5 evidence points"}</span><span>▧ {subject === "Biology" ? "36 real source pages" : "Live adaptive path"}</span></div>
                 <div className="focus-controls">
                   <div className="segmented" aria-label="Session duration">
                     {[15, 25, 40].map((value) => <button key={value} className={minutes === value ? "active" : ""} onClick={() => setMinutes(value)}>{value}m</button>)}
@@ -790,7 +805,7 @@ export default function Home() {
             <div className="page-heading"><div><p>Singapore–Cambridge · H2 {subject === "Biology" ? "9477" : "9476"} · 2026</p><h1>{subject === "Biology" ? "Complete syllabus map" : "Syllabus mastery map"}</h1><span>{subject === "Biology" ? "Coverage tells you what the sources contain; mastery tells you what you can reliably do." : "Mastery and evidence confidence are separate, so an early estimate never looks final."}</span></div><button className="primary-button" onClick={() => startSession("practice")}>Practise weak areas →</button></div>
             {subject === "Biology" ? (
               <>
-                <div className="coverage-summary"><article><b>101</b><span>Content outcomes mapped</span></article><article><b>97</b><span>Covered by supplied PDFs</span></article><article><b>10</b><span>Objectives fully verified</span></article><article className="missing"><b>4</b><span>Missing source outcomes</span></article></div>
+                <div className="coverage-summary"><article><b>101</b><span>Content outcomes mapped</span></article><article><b>96</b><span>Covered by supplied PDFs</span></article><article><b>21</b><span>Objectives fully verified</span></article><article className="missing"><b>5</b><span>Missing source outcomes</span></article></div>
                 <article className="panel coverage-table">
                   <div className="coverage-header"><span>Syllabus area</span><span>Outcomes</span><span>Source coverage</span><span>Verification</span></div>
                   {syllabusAreas.map((area) => (
@@ -819,8 +834,8 @@ export default function Home() {
           <section className="page-content pipeline-page">
             <div className="page-heading"><div><p>Biology content operations</p><h1>{subject === "Biology" ? "17-PDF processing console" : "Chemistry content pipeline"}</h1><span>{subject === "Biology" ? "Every source has been indexed and mapped; verified means its questions and evidence pages are live." : "Add the Chemistry source pack to begin mapping."}</span></div><button className="outline-button" onClick={() => setView("library")}>Manage uploads</button></div>
             {subject === "Biology" ? <>
-              <div className="pipeline-summary"><article><span>Sources</span><b>17</b><small>all text-searchable</small></article><article><span>PDF pages</span><b>852</b><small>indexed</small></article><article><span>Detected figures</span><b>1,866</b><small>available for question design</small></article><article><span>Live packs</span><b>3</b><small>36 verified questions</small></article></div>
-              <article className="pipeline-warning"><span>!</span><div><strong>Cell Structure source still needed</strong><p>The supplied sequence begins with Biomolecules, so official outcomes 1(a)–1(d) remain visibly marked as missing instead of being inferred.</p></div></article>
+              <div className="pipeline-summary"><article><span>Sources</span><b>17</b><small>all text-searchable</small></article><article><span>PDF pages</span><b>852</b><small>indexed</small></article><article><span>Detected figures</span><b>1,866</b><small>available for question design</small></article><article><span>Live packs</span><b>5</b><small>72 verified questions</small></article></div>
+              <article className="pipeline-warning"><span>!</span><div><strong>Two source gaps remain visible</strong><p>Cell Structure outcomes 1(a)–1(d) have no supplied PDF, and Cellular Respiration does not cover investigation outcome 3(k). Aster leaves them unverified instead of inferring evidence.</p></div></article>
               <article className="panel pipeline-table"><div className="pipeline-header"><span>Source</span><span>Size</span><span>9477 mapping</span><span>Status</span></div>{pdfPipeline.map((file) => <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.images} detected figures</small></div></div><p>{file.pages} pages</p><b>{file.mapping}</b><em className={file.status.toLowerCase()}>{file.status === "Verified" ? `✓ Verified · ${file.questions} Q` : "Mapped · QA next"}</em></div>)}</article>
             </> : <article className="panel empty-pipeline"><span>＋</span><h3>No Chemistry source pack yet</h3><p>Upload the coursebook and syllabus to create the same source-to-objective pipeline.</p><button className="primary-button" onClick={() => fileInput.current?.click()}>Upload material</button></article>}
           </section>
@@ -831,7 +846,7 @@ export default function Home() {
             <div className="files-grid">
               {files.map((file, index) => <article className="file-card" key={file.id ?? `${file.name}-${index}`}><div className="pdf-icon">PDF</div><div><span>{file.tag}</span><strong>{file.name}</strong><small>{file.meta}</small></div><em>{file.status === "Error" ? "Retry" : file.status === "Processing" ? "Mapping" : file.status === "Needed" ? "Needed" : "✓ Ready"}</em>{file.id ? <button aria-label={`Delete ${file.name}`} onClick={() => removeFile(file)}>×</button> : <span />}</article>)}
             </div>
-            <article className="panel mapping-panel"><div className="panel-heading"><div><h3>Source alignment</h3><p>Coverage of the active {subject} syllabus</p></div><b>{subject === "Biology" ? "3 packs verified" : "Source pack needed"}</b></div><div className="coverage-bar"><span style={{ width: subject === "Biology" ? "96%" : "8%" }} /></div><div className="coverage-legend"><span><i className="covered" />9477 objectives 1(g)–1(l), 1(p)–1(s) verified</span><span><i className="partial" />1(a)–1(d) source missing</span><button onClick={() => setView(subject === "Biology" ? "pipeline" : "map")}>{subject === "Biology" ? "Open processing console" : "Review mapping"} →</button></div></article>
+            <article className="panel mapping-panel"><div className="panel-heading"><div><h3>Source alignment</h3><p>Coverage of the active {subject} syllabus</p></div><b>{subject === "Biology" ? "5 packs verified" : "Source pack needed"}</b></div><div className="coverage-bar"><span style={{ width: subject === "Biology" ? "95%" : "8%" }} /></div><div className="coverage-legend"><span><i className="covered" />1(g)–1(l), 1(p)–1(s), 3(a)–3(j) and 3(l) verified</span><span><i className="partial" />1(a)–1(d) and 3(k) source missing</span><button onClick={() => setView(subject === "Biology" ? "pipeline" : "map")}>{subject === "Biology" ? "Open processing console" : "Review mapping"} →</button></div></article>
           </section>
         ) : (
           <section className="page-content progress-page">
