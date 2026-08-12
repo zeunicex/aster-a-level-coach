@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, normalizeReviewDate, objectiveNeedsPractice, pickNextQuestion, reliableMastery, reviewLabel } from "../lib/adaptive.mjs";
+import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, normalizeReviewDate, objectiveNeedsPractice, pickNextQuestion, reliableMastery, reviewLabel, secureForNow } from "../lib/adaptive.mjs";
 
 test("weights independent, confident answers more than hinted or uncertain answers", () => {
   assert.equal(evidenceDelta({ correct: true, confidence: "High", difficulty: 2 }), 4);
@@ -27,6 +27,7 @@ test("uses real review dates and upgrades legacy labels without losing progress"
   assert.equal(normalizeReviewDate("Tomorrow", today), "2026-08-12");
   assert.equal(normalizeReviewDate("3 days", today), "2026-08-14");
   assert.equal(nextReviewDate({ correct: true, confidence: "High", evidence: 5, today }), "2026-08-25");
+  assert.equal(nextReviewDate({ correct: true, confidence: "Medium", evidence: 4, today }), "2026-08-18");
   assert.equal(nextReviewDate({ correct: false, confidence: "High", evidence: 5, today }), "2026-08-12");
   assert.equal(isReviewDue("2026-08-10", today), true);
   assert.equal(reviewLabel("2026-08-14", today), "In 3 days");
@@ -52,6 +53,19 @@ test("requires stable independent success across multiple formats before mastery
   assert.equal(reliableMastery(objective, mixed.map((attempt) => ({ ...attempt, format: "mcq" })), "2026-08-11"), false);
   assert.equal(reliableMastery(objective, mixed.map((attempt) => ({ ...attempt, usedHint: true })), "2026-08-11"), false);
   assert.equal(objectiveNeedsPractice({ ...objective, mastered: true }, "2026-08-11"), false);
+});
+
+test("rests secure-for-now objectives early but keeps durable mastery stricter", () => {
+  const attempts = [
+    { correct: true, usedHint: false, confidence: "High", format: "structured" },
+    { correct: true, usedHint: false, confidence: "Medium", format: "mcq" },
+    { correct: true, usedHint: false, confidence: "High", format: "mcq" },
+  ];
+  const objective = { score: 66, evidence: 4, confidence: "Medium", due: "2026-08-25" };
+  assert.equal(secureForNow(objective, attempts, "2026-08-11"), true);
+  assert.equal(reliableMastery(objective, attempts, "2026-08-11"), false);
+  assert.equal(objectiveNeedsPractice({ ...objective, secureForNow: true }, "2026-08-11"), false);
+  assert.equal(objectiveNeedsPractice({ ...objective, secureForNow: true }, "2026-08-25"), true);
 });
 
 test("follows a wrong answer with another question on the same objective", () => {

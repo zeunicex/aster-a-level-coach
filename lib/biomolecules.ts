@@ -11,6 +11,10 @@ export type BiomoleculeQuestion = {
   options?: string[];
   answer?: number;
   data?: { headers: string[]; rows: string[][] };
+  passage?: string;
+  apparatus?: string[];
+  calibration?: { paper: "Paper 2" | "Paper 3" | "Paper 4"; commandWords: string; basis: string; status: "Provisional" | "Past-paper calibrated" };
+  masteryCredit?: boolean;
   markPoints?: string[];
   modelAnswer?: string;
   hint: string;

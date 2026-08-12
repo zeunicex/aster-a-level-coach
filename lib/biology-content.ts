@@ -3,8 +3,9 @@ import { biomoleculeMatureQuestions, enzymeMatureQuestions, transportMatureQuest
 import { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions } from "./core2-questions.ts";
 import { eukaryoteQuestions, inheritanceQuestions, prokaryoteQuestions, virusQuestions } from "./new-biology-packs.ts";
 import { cellQuestions, climateQuestions, communicationQuestions, evolutionQuestions, immunityQuestions } from "./remaining-biology-packs.ts";
+import { examChallengeQuestions } from "./exam-challenges.ts";
 
-export { cellCycleQuestions, cellQuestions, climateQuestions, communicationQuestions, eukaryoteQuestions, evolutionQuestions, geneExpressionQuestions, immunityQuestions, inheritanceQuestions, mutationQuestions, prokaryoteQuestions, techniqueQuestions, virusQuestions };
+export { cellCycleQuestions, cellQuestions, climateQuestions, communicationQuestions, eukaryoteQuestions, evolutionQuestions, examChallengeQuestions, geneExpressionQuestions, immunityQuestions, inheritanceQuestions, mutationQuestions, prokaryoteQuestions, techniqueQuestions, virusQuestions };
 
 export type BiologyQuestion = BiomoleculeQuestion;
 
@@ -677,6 +678,7 @@ export const verifiedBiologyQuestions: BiologyQuestion[] = [
   ...evolutionQuestions,
   ...immunityQuestions,
   ...climateQuestions,
+  ...examChallengeQuestions,
 ];
 
 export const verifiedBiologyAnswerKey = Object.fromEntries(

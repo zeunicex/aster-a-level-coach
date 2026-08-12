@@ -23,6 +23,7 @@ type MasteryItem = {
   application: number;
   exam: number;
   mastered?: boolean;
+  secureForNow?: boolean;
 };
 type Question = {
   id: string;
@@ -37,6 +38,10 @@ type Question = {
   options?: string[];
   answer?: number;
   data?: { headers: string[]; rows: string[][] };
+  passage?: string;
+  apparatus?: string[];
+  calibration?: { paper: "Paper 2" | "Paper 3" | "Paper 4"; commandWords: string; basis: string; status: "Provisional" | "Past-paper calibrated" };
+  masteryCredit?: boolean;
   markPoints?: string[];
   modelAnswer?: string;
   hint: string;
@@ -62,6 +67,10 @@ const formatLabels: Record<QuestionFormat, string> = {
   data: "Data response",
   structured: "Structured response",
   practical: "Practical planning",
+};
+const examDates: Record<Subject, { date: string; label: string }> = {
+  Biology: { date: "2026-10-22T08:00:00+08:00", label: "Paper 4 · 22 Oct 2026" },
+  Chemistry: { date: "2026-10-14T08:00:00+08:00", label: "Paper 4 · 14 Oct 2026" },
 };
 
 const objectiveRank = (code: string) => {
@@ -377,6 +386,7 @@ export default function Home() {
   const sourcedObjectiveCount = syllabusAreas.reduce((total, area) => total + area.sourced, 0);
   const verifiedObjectiveCount = syllabusAreas.reduce((total, area) => total + area.verified, 0);
   const missingObjectiveCount = mappedObjectiveCount - sourcedObjectiveCount;
+  const examDays = Math.max(0, Math.round((Date.parse(examDates[subject].date.slice(0, 10)) - Date.parse(today)) / 86400000));
   const restingCount = currentMastery.length - practiceMastery.length;
 
   const weakTopic = useMemo(() => [...currentMastery].sort((a, b) => a.score - b.score)[0], [currentMastery]);
@@ -490,7 +500,7 @@ export default function Home() {
     let correct = isWritten
       ? Number(awardedMarks) / activeQuestion.marks >= 0.75
       : selectedAnswer === activeQuestion.answer;
-    let delta = isWritten
+    let delta = activeQuestion.masteryCredit === false ? 0 : isWritten
       ? evidenceDeltaFromMarks({ awardedMarks: Number(awardedMarks), totalMarks: activeQuestion.marks, confidence: answerConfidence, usedHint, difficulty: activeQuestion.difficulty })
       : evidenceDelta({ correct, confidence: answerConfidence, usedHint, difficulty: activeQuestion.difficulty });
     let serverMastery: Partial<MasteryItem> | null = null;
@@ -519,7 +529,7 @@ export default function Home() {
       [subject]: current[subject].map((item) => {
         if (item.code !== activeQuestion.code) return item;
         if (serverMastery) return { ...item, ...serverMastery } as MasteryItem;
-        const evidence = item.evidence + 1;
+        const evidence = item.evidence + Number(activeQuestion.masteryCredit !== false);
         const update = (value: number) => Math.max(0, Math.min(100, value + delta));
         const skillUpdates = activeQuestion.skill === "Knowledge"
           ? { knowledge: update(item.knowledge) }
@@ -679,9 +689,10 @@ export default function Home() {
 
         <div className="sidebar-spacer" />
         <div className="exam-card">
-          <div className="exam-card-head"><span>Exam countdown</span><b>42 days</b></div>
+          <div className="exam-card-head"><span>Exam countdown</span><b>{examDays} days</b></div>
           <strong>Singapore–Cambridge</strong>
           <p>H2 {subject} · {subject === "Biology" ? "9744" : "9476"}</p>
+          <p>{examDates[subject].label}</p>
           <div className="mini-progress"><span style={{ width: `${average}%` }} /></div>
           <small>{average}% syllabus mastery</small>
         </div>
@@ -719,6 +730,9 @@ export default function Home() {
                   <div className="question-meta"><span>{sessionKind === "quick" ? "Quick Check" : sessionKind === "diagnostic" ? "Full Diagnostic" : activeQuestion.eyebrow}</span><b>{activeQuestion.marks} {activeQuestion.marks === 1 ? "mark" : "marks"}</b></div>
                   <p className="objective-tag">Syllabus {activeQuestion.objective}</p>
                   <div className="question-signals"><span>{formatLabels[activeFormat]}</span><span>{activeQuestion.skill}</span><span>Difficulty {activeQuestion.difficulty}/3</span><span>Evidence point {evidenceAdded + 1}</span></div>
+                  {activeQuestion.calibration && <div className="calibration-note"><b>{activeQuestion.calibration.paper}</b><span>{activeQuestion.calibration.commandWords}</span><em>{activeQuestion.calibration.status} calibration</em></div>}
+                  {activeQuestion.passage && <article className="unseen-passage"><strong>Unseen scientific passage</strong><p>{activeQuestion.passage}</p></article>}
+                  {activeQuestion.apparatus && <article className="apparatus-list"><strong>Apparatus available</strong><p>{activeQuestion.apparatus.join(" · ")}</p><small>Digital preparation only — complete a supervised hands-on rehearsal before Paper 4.</small></article>}
                   <h1>{activeQuestion.prompt}</h1>
                   {activeQuestion.visual && <SourceVisual kind={activeQuestion.visual} />}
                   {activeQuestion.sourceImage && (activeQuestion.skill === "Image" || activeFormat === "image") && (
@@ -880,12 +894,12 @@ export default function Home() {
                 <article className="panel syllabus-table">
                   <div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>
                   {currentMastery.map((item) => (
-                    <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>
+                    <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.mastered ? "Durably mastered" : item.secureForNow ? "Secure for now" : item.confidence}</span> · {item.evidence} evidence</p><em className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>
                   ))}
                 </article>
               </>
             ) : (
-              <><div className="map-summary"><div><Ring value={average} size={86} /><span><b>{average}%</b><small>Current mastery estimate</small></span></div><div><b>{totalEvidence}</b><small>Evidence points</small></div><div><b>{currentMastery.filter((item) => item.confidence === "Low").length}</b><small>Low-confidence estimates</small></div><div><b>{dueCount}</b><small>Due today</small></div></div><article className="panel syllabus-table"><div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>{currentMastery.map((item) => <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.confidence}</span> · {item.evidence} evidence</p><em className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>)}</article></>
+              <><div className="map-summary"><div><Ring value={average} size={86} /><span><b>{average}%</b><small>Current mastery estimate</small></span></div><div><b>{totalEvidence}</b><small>Evidence points</small></div><div><b>{currentMastery.filter((item) => item.confidence === "Low").length}</b><small>Low-confidence estimates</small></div><div><b>{dueCount}</b><small>Due today</small></div></div><article className="panel syllabus-table"><div className="table-header"><span>Objective</span><span>Mastery</span><span>Evidence confidence</span><span>Next review</span><span /></div>{currentMastery.map((item) => <div className="table-row" key={item.code}><div><small>{item.code}</small><strong>{item.topic}</strong></div><div className="bar-value"><span><i style={{ width: `${item.score}%` }} /></span><b>{item.score}%</b></div><p><span className={`confidence-badge ${item.confidence.toLowerCase()}`}>{item.mastered ? "Durably mastered" : item.secureForNow ? "Secure for now" : item.confidence}</span> · {item.evidence} evidence</p><em className={isReviewDue(item.due, today) ? "due" : ""}>{reviewLabel(item.due, today)}</em><button onClick={() => startSession("practice", item.code)}>Practice</button></div>)}</article></>
             )}
           </section>
         ) : view === "pipeline" ? (

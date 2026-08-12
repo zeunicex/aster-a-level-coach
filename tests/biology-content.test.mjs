@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import test from "node:test";
 import {
   biomoleculeQuestions, cellCycleQuestions, cellQuestions, climateQuestions, communicationQuestions,
-  enzymeQuestions, eukaryoteQuestions, evolutionQuestions, geneExpressionQuestions, immunityQuestions,
+  enzymeQuestions, eukaryoteQuestions, evolutionQuestions, examChallengeQuestions, geneExpressionQuestions, immunityQuestions,
   inheritanceQuestions, mutationQuestions, pdfPipeline, photosynthesisQuestions, practicalSkills,
   packOrderForSource, prokaryoteQuestions, respirationQuestions, syllabusAreas, techniqueQuestions, transportQuestions,
   verifiedBiologyQuestions, virusQuestions,
@@ -40,8 +40,8 @@ test("complete official 9744 map and 18-PDF pipeline are verified", () => {
 
 test("all 18 Biology packs are mature, varied and source-linked", () => {
   assert.deepEqual(packs.map((pack) => pack.length), Array(18).fill(30));
-  assert.equal(verifiedBiologyQuestions.length, 540);
-  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 540);
+  assert.equal(verifiedBiologyQuestions.length, 549);
+  assert.equal(new Set(verifiedBiologyQuestions.map((question) => question.id)).size, 549);
 
   for (const pack of packs) {
     assert.deepEqual(new Set(pack.map((question) => question.format ?? "mcq")), formats);
@@ -57,6 +57,16 @@ test("all 18 Biology packs are mature, varied and source-linked", () => {
       }
     }
   }
+});
+
+test("exam-readiness layer adds long, unseen, apparatus and thin-outcome coverage", () => {
+  assert.equal(examChallengeQuestions.length, 9);
+  assert.ok(examChallengeQuestions.some((question) => question.marks === 25));
+  assert.ok(examChallengeQuestions.some((question) => question.marks >= 10 && question.passage));
+  assert.ok(examChallengeQuestions.some((question) => question.marks >= 10 && question.apparatus));
+  assert.ok(examChallengeQuestions.filter((question) => question.apparatus).every((question) => question.masteryCredit === false));
+  assert.ok(examChallengeQuestions.every((question) => question.calibration?.status === "Provisional"));
+  for (const code of ["2(aa)", "4(k)", "B(i)"]) assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 3, code);
 });
 
 test("every official 9744 content outcome has verified question evidence", () => {

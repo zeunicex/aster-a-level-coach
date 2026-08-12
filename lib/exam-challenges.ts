@@ -1,0 +1,85 @@
+import type { BiomoleculeQuestion } from "./biomolecules.ts";
+
+const provisional = (paper: "Paper 2" | "Paper 3" | "Paper 4", commandWords: string) => ({
+  paper,
+  commandWords,
+  basis: "Official 9744 assessment scheme and syllabus command words; awaiting supplied past papers for year/question calibration",
+  status: "Provisional" as const,
+});
+
+export const examChallengeQuestions: BiomoleculeQuestion[] = [
+  {
+    id: "bio-exam-epistasis-data", code: "2(aa)", eyebrow: "Paper 2 calibration · data response", objective: "2(aa) Epistasis", marks: 3, skill: "Application", difficulty: 3, format: "data",
+    prompt: "A dihybrid cross produces 180 purple, 61 red and 79 white flowers. Which interpretation best accounts for the approximate 9:3:4 ratio?",
+    data: { headers: ["Phenotype", "Purple", "Red", "White"], rows: [["Observed offspring", "180", "61", "79"]] },
+    options: ["A recessive homozygous genotype at one locus masks expression at a second locus", "Both genes assort as one allele", "The environment changes every white genotype", "Codominance occurs at a single locus"], answer: 0,
+    hint: "Compare the observed classes with a modified 9:3:3:1 ratio.", misconception: "Recognising epistatic ratios", explanation: "A 9:3:4 ratio is consistent with recessive epistasis, where a homozygous recessive genotype masks the second locus.",
+    source: "Inheritance.pdf · PDF p.52", sourceImage: "/materials/inheritance/page-52.jpg", sourcePage: 52, calibration: provisional("Paper 2", "interpret; account for"),
+  },
+  {
+    id: "bio-exam-epistasis-structured", code: "2(aa)", eyebrow: "Paper 2 calibration · structured", objective: "2(aa) Epistasis", marks: 4, skill: "Exam technique", difficulty: 3, format: "structured",
+    prompt: "Explain how epistasis can modify a 9:3:3:1 dihybrid phenotypic ratio.",
+    markPoints: ["Two loci contribute to the phenotype", "An allele at one locus masks or alters expression at the other locus", "Different genotypes can therefore produce the same phenotype", "Phenotypic classes combine and the Mendelian ratio is modified"],
+    modelAnswer: "Two loci affect the phenotype, but an allele at one locus masks or changes expression at the second. Several genotypes therefore enter the same phenotype class, modifying the expected 9:3:3:1 ratio.",
+    hint: "Link genotype classes to phenotype classes.", misconception: "Mechanism of epistasis", explanation: "Credit requires the interaction between loci and its consequence for phenotype counts.",
+    source: "Inheritance.pdf · PDF p.52", sourceImage: "/materials/inheritance/page-52.jpg", sourcePage: 52, calibration: provisional("Paper 2", "explain"),
+  },
+  {
+    id: "bio-exam-phylogeny-data", code: "4(k)", eyebrow: "Paper 2 calibration · phylogeny", objective: "4(k) Phylogeny", marks: 3, skill: "Application", difficulty: 3, format: "data",
+    prompt: "Which conclusion is supported by the DNA differences?",
+    data: { headers: ["Pair", "A–B", "A–C", "B–C"], rows: [["Base differences", "8", "31", "29"]] },
+    options: ["A and B share the most recent common ancestor", "A evolved directly into B", "C is an ancestor of both A and B", "All three diverged at the same time"], answer: 0,
+    hint: "Fewer sequence differences usually indicate a more recent divergence.", misconception: "Reading molecular phylogeny evidence", explanation: "A and B have the smallest molecular distance, supporting the closest relationship without implying that one is the other's ancestor.",
+    source: "Biological Evolution.pdf · PDF p.60", sourceImage: "/materials/evolution/page-60.jpg", sourcePage: 60, calibration: provisional("Paper 2", "conclude; support"),
+  },
+  {
+    id: "bio-exam-phylogeny-structured", code: "4(k)", eyebrow: "Paper 3 calibration · reasoning", objective: "4(k) Phylogeny", marks: 4, skill: "Exam technique", difficulty: 3, format: "structured",
+    prompt: "Explain why a phylogenetic tree is a hypothesis rather than a direct record of evolutionary history.",
+    markPoints: ["The tree is inferred from selected morphological or molecular evidence", "Different characters or models can produce different trees", "Incomplete sampling and convergent evolution can mislead inference", "New evidence can support revision of branching relationships"],
+    modelAnswer: "A tree is inferred from limited character data rather than observed directly. Character choice, evolutionary models, incomplete sampling and convergence can change the most likely tree, so new evidence may revise it.",
+    hint: "Distinguish evidence-based inference from direct observation.", misconception: "Certainty of phylogenetic trees", explanation: "Full credit evaluates both the evidence base and its limitations.",
+    source: "Biological Evolution.pdf · PDF p.60", sourceImage: "/materials/evolution/page-60.jpg", sourcePage: 60, calibration: provisional("Paper 3", "explain; evaluate"),
+  },
+  {
+    id: "bio-exam-ecosystem-stress-data", code: "B(i)", eyebrow: "Paper 2 calibration · ecosystem data", objective: "B(i) Ecosystem stress", marks: 3, skill: "Application", difficulty: 3, format: "data",
+    prompt: "Which mechanism best explains the decline in predator breeding success?",
+    data: { headers: ["Year", "Peak caterpillar abundance", "Peak chick demand"], rows: [["Earlier climate", "day 130", "day 132"], ["Warmer climate", "day 112", "day 130"]] },
+    options: ["Phenological mismatch reduces food available when chicks need it", "Predators mutate into herbivores", "All trophic levels shift by the same amount", "Higher temperature removes natural selection"], answer: 0,
+    hint: "Compare the timing of maximum food and maximum demand.", misconception: "Phenological mismatch", explanation: "Unequal shifts in seasonal timing separate peak prey availability from peak chick demand.",
+    source: "Climate Change.pdf · PDF p.48", sourceImage: "/materials/climate/page-48.jpg", sourcePage: 48, calibration: provisional("Paper 2", "explain; interpret"),
+  },
+  {
+    id: "bio-exam-ecosystem-stress-structured", code: "B(i)", eyebrow: "Paper 3 calibration · integration", objective: "B(i) Ecosystem stress", marks: 4, skill: "Exam technique", difficulty: 3, format: "structured",
+    prompt: "Explain how climate change can reduce ecosystem stability even when no species initially becomes extinct.",
+    markPoints: ["Species differ in thermal tolerance and shift distribution or timing unequally", "Interactions such as pollination, predation or competition are disrupted", "Food-web energy transfer and population sizes become more variable", "Reduced functional redundancy or resilience increases the risk of later collapse"],
+    modelAnswer: "Species respond at different rates, disrupting interactions and food-web timing. Population variability rises and ecological functions become less redundant, reducing resilience before any immediate extinction occurs.",
+    hint: "Build a chain from unequal responses to interactions and resilience.", misconception: "Ecosystem stability under climate stress", explanation: "The answer must link organism responses to community-level stability.",
+    source: "Climate Change.pdf · PDF p.48", sourceImage: "/materials/climate/page-48.jpg", sourcePage: 48, calibration: provisional("Paper 3", "explain"),
+  },
+  {
+    id: "bio-exam-unseen-viral-vector", code: "2(j)", eyebrow: "Paper 3 · unseen scientific passage", objective: "2(j) Eukaryotic gene expression and application", marks: 15, skill: "Exam technique", difficulty: 3, format: "structured",
+    passage: "Researchers engineered a non-replicating viral vector to deliver a functional regulatory gene into patient-derived stem cells. Treated cells produced more target protein, but expression varied among clones. Whole-genome sequencing detected vector insertion at several chromosomal sites. In a mouse model, some treated clones proliferated faster than untreated cells after six months.",
+    prompt: "Using the passage and your biological knowledge, analyse the evidence, explain the variable expression, and evaluate whether the treatment is ready for clinical use.",
+    markPoints: ["The viral vector delivers genetic material into cells", "A functional regulatory gene can increase transcription of a target gene", "Increased mRNA can increase translation and target protein", "Insertion site affects access to enhancers, silencers or chromatin", "Different insertion sites therefore cause clone-to-clone expression variation", "Copy number can also affect expression level", "Vector insertion may disrupt an endogenous gene", "Insertion near a proto-oncogene may increase proliferation", "Faster proliferation after six months is a potential tumour risk", "The mouse result supports concern but does not establish human clinical risk", "A non-replicating vector reduces but does not remove insertional risk", "More independent clones and biological replicates are required", "Longer follow-up is required to detect delayed effects", "Off-target insertion sites and expression stability should be quantified", "Clinical use requires evidence that benefit outweighs risk and appropriate monitoring"],
+    modelAnswer: "The vector introduces the regulatory gene, which may increase target transcription and protein synthesis. Variable insertion sites, copy number and chromatin environment explain clone variation. However, insertional disruption or activation of a proto-oncogene could explain later proliferation. The mouse evidence is a warning rather than proof of human harm; larger replicated studies, insertion-site analysis and long-term monitoring are needed before clinical use.",
+    hint: "Separate mechanism, interpretation, limitations and a justified judgement.", misconception: "Evaluating gene-therapy evidence", explanation: "Marks reward use of the passage, molecular mechanisms, limitations and a balanced judgement.",
+    source: "OCGE in Eukaryotes & Stem Cell.pdf · PDF p.76", sourceImage: "/materials/eukaryotes/page-76.jpg", sourcePage: 76, calibration: provisional("Paper 3", "analyse; explain; evaluate"),
+  },
+  {
+    id: "bio-exam-cross-topic-essay", code: "4(a)", eyebrow: "Paper 3 · 25-mark free response", objective: "4(a) Variation in natural selection", marks: 25, skill: "Exam technique", difficulty: 3, format: "structured",
+    prompt: "Discuss how changes in DNA can produce biological effects from the molecular level to populations and ecosystems. Use examples from gene expression, inheritance, evolution, infectious disease and climate change.",
+    markPoints: ["DNA base sequence determines RNA sequence by transcription", "RNA sequence determines amino-acid sequence by translation", "A substitution can be silent because the genetic code is degenerate", "A missense mutation can alter protein primary structure", "A changed primary structure can alter folding and function", "Mutations in regulatory DNA can change gene expression", "Mutations in coding or regulatory genes can alter phenotype", "Meiosis and fertilisation generate new allele combinations", "Alleles are inherited through gametes", "Dominance and epistasis affect phenotypic expression", "Environmental conditions influence phenotype and selection", "Mutation is a source of new alleles", "Selection acts on phenotypic variation", "Individuals with advantageous phenotypes leave more offspring", "Allele frequencies change across generations", "Populations rather than individuals evolve", "Genetic drift can alter allele frequencies by chance", "Isolation can reduce gene flow", "Divergence can lead to reproductive isolation and speciation", "Pathogen mutation can alter antigen structure", "Antigenic change can reduce recognition by existing antibodies", "Antibiotic use selects resistant bacterial variants", "Climate change changes selection pressures and species distributions", "Unequal species responses can disrupt ecological interactions", "The overall effect depends on molecular mechanism, inheritance, environment and time scale"],
+    modelAnswer: "A strong response links DNA changes to RNA, protein and phenotype, then explains how inheritance and selection change allele frequencies. Relevant examples include pathogen antigen variation, antibiotic resistance and climate-driven shifts in selection and ecological interactions. It should distinguish mutation from selection and individual effects from population evolution.",
+    hint: "Organise the essay by scale: DNA → protein → phenotype → inheritance → population → ecosystem.", misconception: "Integrating levels of biological organisation", explanation: "The checklist reflects the breadth, biological accuracy, integration and argument expected in a 25-mark response.",
+    source: "Biological Evolution.pdf · PDF p.23; DNA Mutations & Its Consequences.pdf; Immunity & Infectious Diseases.pdf; Climate Change.pdf", sourceImage: "/materials/evolution/page-23.jpg", sourcePage: 23, calibration: provisional("Paper 3", "discuss"),
+  },
+  {
+    id: "bio-exam-apparatus-drill", code: "1(b)", eyebrow: "Paper 4 · apparatus readiness", objective: "1(b) Recognising organelles and membrane systems", marks: 10, skill: "Exam technique", difficulty: 3, format: "practical",
+    apparatus: ["Light microscope", "Stage micrometer", "Eyepiece graticule", "Prepared slide", "Lens tissue"],
+    prompt: "Describe and justify how you would calibrate an eyepiece graticule, measure ten cells safely and obtain a reliable mean cell diameter.",
+    markPoints: ["Place the stage micrometer on the microscope stage", "Focus using low power before increasing magnification", "Align the eyepiece-graticule and stage-micrometer scales", "Count matching divisions across the longest clear overlap", "Calculate the micrometres represented by one eyepiece division", "Keep the same objective lens after calibration", "Replace the micrometer with the specimen slide", "Measure ten appropriately oriented cells in eyepiece divisions", "Convert every reading to micrometres using the calibration", "Calculate a mean and identify anomalous or unsuitable cells"],
+    modelAnswer: "Calibrate the eyepiece scale against a stage micrometer at the selected objective, calculate micrometres per division, then measure ten suitable cells without changing magnification. Convert each reading and calculate the mean, excluding only measurements that are visibly invalid and explaining why.",
+    hint: "Your answer must cover calibration, measurement, reliability and safe microscope use.", misconception: "Operating and calibrating a microscope", explanation: "This drill prepares the decision sequence, but actual Paper 4 readiness still requires supervised hands-on practice with the apparatus.",
+    source: "2024 H2 Cell - Lecture Notes_Student.docx.pdf · PDF p.54", sourceImage: "/materials/cell/page-54.jpg", sourcePage: 54, calibration: provisional("Paper 4", "describe; justify"), masteryCredit: false,
+  },
+];
