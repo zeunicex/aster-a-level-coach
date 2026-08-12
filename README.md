@@ -1,100 +1,62 @@
-# vinext-starter
+# Aster — Personalised A Level Learning
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Aster is an adaptive A Level learning coach. The current release focuses on
+Biology 9477 and combines syllabus-aligned question packs, structured marking,
+reliable mastery decisions, source images, and an owner-only student activity
+dashboard.
 
-## Prerequisites
+Live site: <https://aster-a-level-coach.ezbzz.chatgpt.site/>
 
-- Node.js `>=22.13.0`
+## What is included
 
-## Quick Start
+- 13 mature Biology packs with 390 questions
+- six question formats across mature packs
+- rubric-based marking for structured and practical questions
+- adaptive practice that skips reliably mastered content
+- first-time student registration and teacher activity reporting
+- Cloudflare D1 and R2 bindings managed by OpenAI Sites
+
+Production student records and uploaded source documents are stored by the
+hosted site. They are not committed to this repository.
+
+## Run locally
+
+Requirements: Node.js `>=22.13.0`.
 
 ```bash
-npm install
+npm ci
+npm test
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+The development server prints the local URL. Local data is separate from the
+production site.
 
-## Included Shape
+## Maintain from another Mac
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+1. Sign in to GitHub and clone this private repository.
+2. Install Node.js 22, then run `npm ci` and `npm test`.
+3. Open the cloned folder in Codex while signed in to the same ChatGPT account.
+4. Keep `.openai/hosting.json` unchanged so deployments continue to use the
+   existing Aster site and its hosted data.
+5. Before editing, pull the newest `main`; after a verified release, commit and
+   push the change so both Macs stay in sync.
 
-## Workspace Auth Headers
+Do not commit `.env` files, local databases, build folders, credentials, or raw
+student exports. These are excluded by `.gitignore`.
 
-Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
+## Useful commands
 
-The user ID is stable for the same user on the same Site and different across Sites. Email and name are intended for display or contact purposes.
+- `npm run dev` — start local development
+- `npm test` — build and run the automated checks
+- `npm run lint` — run code-quality checks
+- `npm run db:generate` — generate a migration after a database schema change
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+## Project map
 
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get("oai-authenticated-user-id");
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+- `app/` — interface and server endpoints
+- `lib/` — Biology content, adaptive logic, and marking
+- `db/` — schema and question-pack persistence
+- `drizzle/` — database migrations
+- `public/materials/` — selected source images used by questions
+- `tests/` — automated checks
