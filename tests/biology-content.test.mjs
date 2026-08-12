@@ -73,4 +73,7 @@ test("9744 remaps close the former protein, central-dogma, operon, respiration a
   const respirationPracticals = verifiedBiologyQuestions.filter((question) => question.code === "3(k)");
   assert.ok(respirationPracticals.every((question) => question.sourceUrl?.startsWith("https://")));
   assert.ok(respirationPracticals.every((question) => packOrderForSource(question.source) === 6));
+  assert.ok(respirationPracticals.some((question) => /concentration/i.test(question.prompt)));
+  assert.ok(respirationPracticals.some((question) => /substrate/i.test(question.prompt)));
+  assert.ok(respirationPracticals.some((question) => /temperature/i.test(question.prompt)));
 });

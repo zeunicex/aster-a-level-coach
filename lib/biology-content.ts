@@ -517,9 +517,9 @@ export const respirationQuestions: BiologyQuestion[] = [
   },
   {
     id: "bio-resp-initial-rate", code: "3(k)", eyebrow: "9744 practical · initial rate", objective: "3(k) Respiration investigations", marks: 2, skill: "Application", difficulty: 2,
-    prompt: "Why should initial oxygen-uptake rate be compared when testing respiratory substrates?", options: ["Substrate depletion and product accumulation have had minimal effect", "Every respirometer has reached equilibrium", "Temperature no longer matters", "It guarantees identical organisms"], answer: 0,
+    prompt: "When comparing several glucose concentrations, why should initial respiration rate be used?", options: ["Substrate depletion and product accumulation have had minimal effect", "Every respirometer has reached equilibrium", "Temperature no longer matters", "It guarantees identical organisms"], answer: 0,
     hint: "Use the earliest linear part of each time course.", misconception: "Choosing a valid respiratory rate", explanation: "An initial rate gives the fairest comparison before the reaction mixture changes substantially.",
-    source: "Cellular Respiration.pdf pack supplement · Nuffield Practical Biology respirometer protocol", sourceUrl: "https://practicalbiology.org/energy/gas-balance-in-respiration-and-photosynthesis/measuring-the-rate-of-metabolism.html", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
+    source: "Cellular Respiration.pdf pack supplement · Evergreen State College yeast metabolism practical", sourceUrl: "https://archives.evergreen.edu/webpages/curricular/2007-2008/healthfoundations/yeast.pdf", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
   },
   {
     id: "bio-resp-yeast-products", code: "3(i)", eyebrow: "Verified source · pathway products", objective: "3(i) Anaerobic respiration", marks: 1, skill: "Knowledge", difficulty: 1,
