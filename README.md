@@ -1,7 +1,7 @@
 # Aster — Personalised A Level Learning
 
 Aster is an adaptive A Level learning coach. The current release focuses on
-Biology 9477 and combines syllabus-aligned question packs, structured marking,
+Biology 9744 and combines syllabus-aligned question packs, structured marking,
 reliable mastery decisions, source images, and an owner-only student activity
 dashboard.
 
@@ -9,7 +9,7 @@ Live site: <https://aster-a-level-coach.ezbzz.chatgpt.site/>
 
 ## What is included
 
-- 13 mature Biology packs with 390 questions
+- 18 mature Biology packs with 540 questions covering all 99 content outcomes
 - six question formats across mature packs
 - rubric-based marking for structured and practical questions
 - adaptive practice that skips reliably mastered content

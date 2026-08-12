@@ -2,20 +2,21 @@ import { biomoleculeQuestions as biomoleculeSeedQuestions, type BiomoleculeQuest
 import { biomoleculeMatureQuestions, enzymeMatureQuestions, transportMatureQuestions } from "./core1-mature-questions.ts";
 import { cellCycleQuestions, geneExpressionQuestions, mutationQuestions, techniqueQuestions } from "./core2-questions.ts";
 import { eukaryoteQuestions, inheritanceQuestions, prokaryoteQuestions, virusQuestions } from "./new-biology-packs.ts";
+import { cellQuestions, climateQuestions, communicationQuestions, evolutionQuestions, immunityQuestions } from "./remaining-biology-packs.ts";
 
-export { cellCycleQuestions, eukaryoteQuestions, geneExpressionQuestions, inheritanceQuestions, mutationQuestions, prokaryoteQuestions, techniqueQuestions, virusQuestions };
+export { cellCycleQuestions, cellQuestions, climateQuestions, communicationQuestions, eukaryoteQuestions, evolutionQuestions, geneExpressionQuestions, immunityQuestions, inheritanceQuestions, mutationQuestions, prokaryoteQuestions, techniqueQuestions, virusQuestions };
 
 export type BiologyQuestion = BiomoleculeQuestion;
 
 export const biomoleculeQuestions: BiologyQuestion[] = [...biomoleculeSeedQuestions, ...biomoleculeMatureQuestions];
 
 export const syllabusAreas = [
-  { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(u)", outcomes: 21, sourced: 17, verified: 14, status: "In verification", note: "Viruses, biomolecules, membranes, enzymes and stem cells are live. Cell Structure 1(a)–1(d) has no supplied PDF." },
-  { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 28, status: "In verification", note: "Thirteen mature Biology packs now cover genome organisation, inheritance and the existing molecular and cell-cycle units." },
-  { code: "Core 3", title: "Energy and Equilibrium", range: "3(a)–3(p)", outcomes: 16, sourced: 15, verified: 11, status: "In verification", note: "Energy transformation 3(a)–3(j) and 3(l) is live. The supplied respiration PDF does not cover investigation outcome 3(k); signalling 3(m)–3(p) remains mapped." },
-  { code: "Core 4", title: "Biological Evolution", range: "4(a)–4(n)", outcomes: 14, sourced: 14, verified: 0, status: "Mapped", note: "Evolution source indexed and awaiting question validation." },
-  { code: "Extension A", title: "Infectious Diseases", range: "A(a)–A(k)", outcomes: 11, sourced: 11, verified: 0, status: "Mapped", note: "Viruses, bacteria, immunity and infectious diseases indexed." },
-  { code: "Extension B", title: "Climate Change", range: "B(a)–B(i)", outcomes: 9, sourced: 9, verified: 0, status: "Mapped", note: "Climate change source indexed and awaiting question validation." },
+  { code: "Core 1", title: "The Cell and Biomolecules of Life", range: "1(a)–1(v)", outcomes: 22, sourced: 22, verified: 22, status: "Verified", note: "Cell structure, viruses, biomolecules, membranes, proteins, enzymes and stem cells are covered by mature source-linked packs." },
+  { code: "Core 2", title: "Genetics and Inheritance", range: "2(a)–2(dd)", outcomes: 30, sourced: 30, verified: 30, status: "Verified", note: "DNA/RNA, replication, gene expression, operons, inheritance, cell cycles and molecular genetics are fully mapped to 9744." },
+  { code: "Core 3", title: "Energy and Equilibrium", range: "3(a)–3(p)", outcomes: 16, sourced: 16, verified: 16, status: "Verified", note: "Photosynthesis, respiration investigations, chemiosmosis and cell communication are covered by mature packs." },
+  { code: "Core 4", title: "Biological Evolution", range: "4(a)–4(l)", outcomes: 12, sourced: 12, verified: 12, status: "Verified", note: "Variation, selection, evidence, species concepts, speciation and molecular phylogeny are verified." },
+  { code: "Extension A", title: "Infectious Diseases", range: "A(a)–A(i)", outcomes: 9, sourced: 9, verified: 9, status: "Verified", note: "Immunity, antibody diversity, vaccination, viral and bacterial disease, and antibiotics are verified." },
+  { code: "Extension B", title: "Impact of Climate Change on Animals and Plants", range: "B(a)–B(j)", outcomes: 10, sourced: 10, verified: 10, status: "Verified", note: "Causes, ecosystem and food impacts, insects, dengue, vectors and tropical biodiversity are verified." },
 ] as const;
 
 export const practicalSkills = [
@@ -26,23 +27,24 @@ export const practicalSkills = [
 ] as const;
 
 export const pdfPipeline = [
-  { order: 2, name: "Biomolecules.pdf", pages: 94, images: 206, mapping: "1(g)–1(i)", status: "Verified", questions: 30 },
+  { order: 1, name: "2024 H2 Cell - Lecture Notes_Student.docx.pdf", pages: 57, images: 204, mapping: "1(a)–1(d)", status: "Verified", questions: 30 },
+  { order: 2, name: "Biomolecules.pdf", pages: 94, images: 206, mapping: "1(g)–1(i), 1(m)–1(o)", status: "Verified", questions: 30 },
   { order: 3, name: "Enzymes.pdf", pages: 38, images: 71, mapping: "1(p)–1(s)", status: "Verified", questions: 30 },
   { order: 4, name: "Cellular Transport.pdf", pages: 25, images: 40, mapping: "1(j)–1(l)", status: "Verified", questions: 30 },
   { order: 5, name: "Photosynthesis.pdf", pages: 40, images: 149, mapping: "3(a)–3(e), 3(l)", status: "Verified", questions: 30 },
-  { order: 6, name: "Cellular Respiration.pdf", pages: 24, images: 64, mapping: "3(f)–3(j), 3(l)", status: "Verified", questions: 30 },
+  { order: 6, name: "Cellular Respiration.pdf", pages: 24, images: 64, mapping: "3(f)–3(l)", status: "Verified", questions: 30 },
   { order: 7, name: "The Cell Cycle.pdf", pages: 60, images: 151, mapping: "2(n)–2(o), 2(s)–2(t)", status: "Verified", questions: 30 },
-  { order: 8, name: "DNA Replication & Gene Expression.pdf", pages: 52, images: 124, mapping: "2(a)–2(b)", status: "Verified", questions: 30 },
+  { order: 8, name: "DNA Replication & Gene Expression.pdf", pages: 52, images: 124, mapping: "2(a)–2(c)", status: "Verified", questions: 30 },
   { order: 9, name: "DNA Mutations & Its Consequences.pdf", pages: 39, images: 86, mapping: "2(l)–2(m), 2(p)–2(r)", status: "Verified", questions: 30 },
   { order: 10, name: "Molecular Techniques in DNA Analysis.pdf", pages: 27, images: 38, mapping: "2(k)", status: "Verified", questions: 30 },
-  { order: 11, name: "OCGE in Eukaryotes & Stem Cell.pdf", pages: 96, images: 183, mapping: "1(t)–1(u), 2(d), 2(h)–2(i)", status: "Verified", questions: 30 },
+  { order: 11, name: "OCGE in Eukaryotes & Stem Cell.pdf", pages: 96, images: 183, mapping: "1(t)–1(v), 2(d), 2(h), 2(j)", status: "Verified", questions: 30 },
   { order: 12, name: "Viruses.pdf", pages: 42, images: 127, mapping: "1(e)–1(f), 2(d)–2(f)", status: "Verified", questions: 30 },
-  { order: 13, name: "OCGE in Prokaryotes (Bacteria).pdf", pages: 44, images: 77, mapping: "2(d), 2(g)", status: "Verified", questions: 30 },
+  { order: 13, name: "OCGE in Prokaryotes (Bacteria).pdf", pages: 44, images: 77, mapping: "2(d), 2(g), 2(i)", status: "Verified", questions: 30 },
   { order: 14, name: "Inheritance.pdf", pages: 75, images: 161, mapping: "2(u)–2(dd)", status: "Verified", questions: 30 },
-  { order: 15, name: "Cell Communication.pdf", pages: 30, images: 71, mapping: "Core 3", status: "Mapped", questions: 0 },
-  { order: 16, name: "Biological Evolution.pdf", pages: 64, images: 184, mapping: "Core 4", status: "Mapped", questions: 0 },
-  { order: 17, name: "Immunity & Infectious Diseases.pdf", pages: 51, images: 87, mapping: "Extension A", status: "Mapped", questions: 0 },
-  { order: 18, name: "Climate Change.pdf", pages: 51, images: 47, mapping: "Extension B", status: "Mapped", questions: 0 },
+  { order: 15, name: "Cell Communication.pdf", pages: 30, images: 71, mapping: "3(m)–3(p)", status: "Verified", questions: 30 },
+  { order: 16, name: "Biological Evolution.pdf", pages: 64, images: 184, mapping: "4(a)–4(l)", status: "Verified", questions: 30 },
+  { order: 17, name: "Immunity & Infectious Diseases.pdf", pages: 51, images: 87, mapping: "A(a)–A(i)", status: "Verified", questions: 30 },
+  { order: 18, name: "Climate Change.pdf", pages: 51, images: 47, mapping: "B(a)–B(j)", status: "Verified", questions: 30 },
 ] as const;
 
 export type PackStatus = "Draft" | "Verified" | "Live";
@@ -496,7 +498,7 @@ export const respirationQuestions: BiologyQuestion[] = [
     source: "Cellular Respiration.pdf · PDF pp.12–14 · printed pp.50–52", sourceImage: "/materials/respiration/page-14.jpg", sourcePage: 52,
   },
   {
-    id: "bio-resp-oxygen", code: "3(h)", eyebrow: "Verified source · final acceptor", objective: "3(h) Oxidative phosphorylation", marks: 2, skill: "Knowledge", difficulty: 1,
+    id: "bio-resp-oxygen", code: "3(h)", eyebrow: "Image · final acceptor", objective: "3(h) Oxidative phosphorylation", marks: 2, skill: "Image", difficulty: 1, format: "image",
     prompt: "What is oxygen's role in oxidative phosphorylation?", options: ["It donates electrons to reduced NAD", "It pumps protons directly", "It phosphorylates ADP", "It is the final electron acceptor and is reduced to water"], answer: 3,
     hint: "Without this acceptor, electron flow through the chain stops.", misconception: "Role of oxygen in respiration", explanation: "Oxygen accepts electrons and protons at the end of the electron transport chain, forming water and allowing continued carrier oxidation.",
     source: "Cellular Respiration.pdf · PDF p.15 · printed p.53", sourceImage: "/materials/respiration/page-15.jpg", sourcePage: 53,
@@ -514,10 +516,10 @@ export const respirationQuestions: BiologyQuestion[] = [
     source: "Cellular Respiration.pdf · PDF p.18 · printed p.56", sourceImage: "/materials/respiration/page-18.jpg", sourcePage: 56,
   },
   {
-    id: "bio-resp-anaerobic-yield", code: "3(i)", eyebrow: "Verified source · ATP yield", objective: "3(i) Anaerobic respiration", marks: 2, skill: "Application", difficulty: 2,
-    prompt: "Why is ATP yield small when oxygen is unavailable?", options: ["Glucose cannot enter cells", "Only substrate-level phosphorylation in glycolysis continues; oxidative phosphorylation stops", "ATP synthase moves to the nucleus", "Fermentation consumes all ATP"], answer: 1,
-    hint: "Identify which ATP-producing process requires oxygen indirectly.", misconception: "Low ATP yield in anaerobic conditions", explanation: "Without oxygen as the final electron acceptor, the electron transport chain and oxidative phosphorylation stop. Glycolysis supplies only a net two ATP per glucose.",
-    source: "Cellular Respiration.pdf · PDF pp.20–21 · printed pp.58–59", sourceImage: "/materials/respiration/page-20.jpg", sourcePage: 58,
+    id: "bio-resp-initial-rate", code: "3(k)", eyebrow: "9744 practical · initial rate", objective: "3(k) Respiration investigations", marks: 2, skill: "Application", difficulty: 2,
+    prompt: "Why should initial oxygen-uptake rate be compared when testing respiratory substrates?", options: ["Substrate depletion and product accumulation have had minimal effect", "Every respirometer has reached equilibrium", "Temperature no longer matters", "It guarantees identical organisms"], answer: 0,
+    hint: "Use the earliest linear part of each time course.", misconception: "Choosing a valid respiratory rate", explanation: "An initial rate gives the fairest comparison before the reaction mixture changes substantially.",
+    source: "9744 H2 Biology syllabus.pdf · PDF p.18", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
   },
   {
     id: "bio-resp-yeast-products", code: "3(i)", eyebrow: "Verified source · pathway products", objective: "3(i) Anaerobic respiration", marks: 1, skill: "Knowledge", difficulty: 1,
@@ -611,19 +613,19 @@ export const respirationQuestions: BiologyQuestion[] = [
     source: "Cellular Respiration.pdf · PDF p.15 · printed p.53", sourceImage: "/materials/respiration/page-15.jpg", sourcePage: 53,
   },
   {
-    id: "bio-resp-yield-data", code: "3(i)", eyebrow: "Data response · ATP yield", objective: "3(i) Anaerobic respiration", marks: 2, skill: "Application", difficulty: 2, format: "data",
-    prompt: "A tissue produces the same amount of ATP under two conditions. Which inference follows from the data?", data: { headers: ["Condition", "Glucose used / units", "ATP made / units"], rows: [["Aerobic", "1", "30"], ["Anaerobic", "15", "30"]] },
-    options: ["Anaerobic respiration extracts more energy per glucose", "Anaerobic tissue must consume more glucose because ATP yield per glucose is much lower", "Oxygen prevents ATP formation", "Glycolysis occurs only aerobically"], answer: 1,
-    hint: "Compare glucose required for the same ATP output.", misconception: "Applying low anaerobic ATP yield", explanation: "Anaerobic conditions rely on the small net ATP yield of glycolysis, so much more glucose is needed to provide the same ATP output.",
-    source: "Cellular Respiration.pdf · PDF pp.20–21 · printed pp.58–59", sourceImage: "/materials/respiration/page-20.jpg", sourcePage: 58,
+    id: "bio-resp-substrate-data", code: "3(k)", eyebrow: "Data response · respiratory substrate", objective: "3(k) Respiration investigations", marks: 3, skill: "Application", difficulty: 3, format: "data",
+    prompt: "Which substrate supports the greatest initial respiration rate?", data: { headers: ["Substrate", "O₂ uptake at 0 min", "O₂ uptake at 5 min"], rows: [["Glucose", "0.0", "2.8"], ["Starch", "0.0", "0.7"], ["No substrate", "0.0", "0.2"]] },
+    options: ["Glucose, because its oxygen-uptake gradient is steepest", "Starch", "No substrate", "All are equal"], answer: 0,
+    hint: "Calculate change per unit time, not only the final label.", misconception: "Interpreting respirometer data", explanation: "Glucose produces the largest oxygen decrease over the same interval and therefore the greatest initial aerobic respiration rate.",
+    source: "9744 H2 Biology syllabus.pdf · PDF p.18", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
   },
   {
-    id: "bio-resp-yield-structured", code: "3(i)", eyebrow: "Structured response · compare yields", objective: "3(i) Anaerobic respiration", marks: 3, skill: "Exam technique", difficulty: 2, format: "structured",
-    prompt: "Explain why anaerobic respiration gives a much lower ATP yield per glucose than aerobic respiration.",
-    markPoints: ["Without oxygen the electron transport chain/oxidative phosphorylation stops", "Only substrate-level phosphorylation in glycolysis continues", "Glucose is only partially oxidised and much energy remains in lactate or ethanol"],
-    modelAnswer: "Without oxygen, oxidative phosphorylation stops. ATP comes only from substrate-level phosphorylation in glycolysis, and glucose is incompletely oxidised, leaving energy in lactate or ethanol.",
-    hint: "Name the ATP-producing pathway that stops and where energy remains.", misconception: "Explaining anaerobic ATP yield", explanation: "The strongest answer combines the missing mechanism with incomplete oxidation.",
-    source: "Cellular Respiration.pdf · PDF pp.20–21 · printed pp.58–59", sourceImage: "/materials/respiration/page-20.jpg", sourcePage: 58,
+    id: "bio-resp-temperature-practical", code: "3(k)", eyebrow: "Practical · respiration rate", objective: "3(k) Respiration investigations", marks: 4, skill: "Exam technique", difficulty: 3, format: "practical",
+    prompt: "Plan a respirometer investigation of temperature on seed respiration rate.",
+    markPoints: ["Use equal masses and germination stages of seeds at several thermostatically controlled temperatures", "Use carbon-dioxide absorbent and measure oxygen-related manometer displacement per unit time", "Keep apparatus volume, acclimatisation time and measurement interval constant and include a non-respiring control", "Repeat each temperature and compare mean initial rates"],
+    modelAnswer: "Place equal masses of equally germinated seeds in sealed respirometers with carbon-dioxide absorbent at controlled temperatures. After acclimatisation, measure manometer displacement per unit time, using matched non-respiring controls and repeats to calculate mean initial rates.",
+    hint: "Control biological material and apparatus, then measure an initial rate reliably.", misconception: "Planning a respiration investigation", explanation: "The plan isolates temperature and measures oxygen uptake while controlling pressure changes not caused by respiration.",
+    source: "9744 H2 Biology syllabus.pdf · PDF p.18", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
   },
   {
     id: "bio-resp-fermentation-sequence", code: "3(j)", eyebrow: "Sequence · NAD regeneration", objective: "3(j) NAD regeneration", marks: 3, skill: "Application", difficulty: 2, format: "sequence",
@@ -657,6 +659,7 @@ export const respirationQuestions: BiologyQuestion[] = [
 ];
 
 export const verifiedBiologyQuestions: BiologyQuestion[] = [
+  ...cellQuestions,
   ...biomoleculeQuestions,
   ...enzymeQuestions,
   ...transportQuestions,
@@ -670,6 +673,10 @@ export const verifiedBiologyQuestions: BiologyQuestion[] = [
   ...virusQuestions,
   ...prokaryoteQuestions,
   ...inheritanceQuestions,
+  ...communicationQuestions,
+  ...evolutionQuestions,
+  ...immunityQuestions,
+  ...climateQuestions,
 ];
 
 export const verifiedBiologyAnswerKey = Object.fromEntries(

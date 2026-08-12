@@ -1,73 +1,30 @@
 import { visitorIdentity, visitorJson } from "@/app/visitor";
 import { getStore } from "@/db/runtime";
 import { seedContentPacks } from "@/db/packs";
-import { packOrderForSource, verifiedBiologyAnswerKey } from "@/lib/biology-content";
+import { packOrderForSource, verifiedBiologyAnswerKey, verifiedBiologyQuestions } from "@/lib/biology-content";
 import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, nextReviewDate, normalizeReviewDate, reliableMastery } from "@/lib/adaptive.mjs";
 import { gradeStructuredAnswer } from "@/lib/marking.mjs";
 
-const seedMastery = {
-  Biology: [
-    ["1(e)", "Viral structures", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(f)", "Viruses, life and cell theory", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(g)", "Biomolecule monomers", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(h)", "Biological bonds", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(i)", "Structure and function", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(j)", "Fluid mosaic membrane", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(k)", "Membrane functions", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(l)", "Membrane transport", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(p)", "Enzyme action", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(q)", "Enzyme investigations", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(r)", "Inhibitor binding", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(s)", "Inhibitor effects", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(t)", "Stem-cell potency", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["1(u)", "Stem-cell functions", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(a)", "DNA replication", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(b)", "Gene expression", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(d)", "Genome organisation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(e)", "Viral reproductive cycles", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(f)", "Viral genome variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(g)", "Prokaryotic genetic variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(h)", "Eukaryotic non-coding DNA", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(i)", "Eukaryotic gene regulation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(k)", "Molecular DNA techniques", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(l)", "Mutation and chromosome aberration", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(m)", "Mutation and genetic disease", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(n)", "Mitotic cell cycle", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(o)", "Mitosis significance and control", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(p)", "Cancer risk factors", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(q)", "Oncogenes and tumour suppressors", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(r)", "Multi-step cancer development", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(s)", "Meiotic cell cycle", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(t)", "Meiosis and variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(u)", "Genetic terminology", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(v)", "Inheritance through gametes", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(w)", "Genotype and phenotype", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(x)", "Genetic diagrams", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(y)", "Test crosses", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(z)", "Linkage and crossing over", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(aa)", "Epistasis", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(bb)", "Environmental effects on phenotype", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(cc)", "Continuous and discontinuous variation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["2(dd)", "Chi-squared tests", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(a)", "Energy organelles", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(b)", "Photosynthetic spectra", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(c)", "Light-dependent reactions", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(d)", "Calvin cycle", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(e)", "Photosynthesis investigations", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(f)", "Glycolysis", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(g)", "Link reaction and Krebs cycle", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(h)", "Oxidative phosphorylation", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(i)", "Anaerobic respiration", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(j)", "NAD regeneration", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-    ["3(l)", "Chemiosmosis", 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today"],
-  ],
+type SeedRow = [string, string, number, number, string, number, number, number, string, string];
+const objectiveRank = (code: string) => {
+  const [, area = "", token = ""] = code.match(/^(\d|A|B)\(([a-z]+)\)$/) ?? [];
+  const areaRank = ["1", "2", "3", "4", "A", "B"].indexOf(area);
+  const tokenRank = token.length === 1 ? "abcdefghijklmnopqrstuvwxyz".indexOf(token) : 26 + ["aa", "bb", "cc", "dd"].indexOf(token);
+  return areaRank * 100 + tokenRank;
+};
+const biologySeedMastery: SeedRow[] = [...new Map(verifiedBiologyQuestions.map((question) => [question.code, [
+  question.code, question.objective.replace(/^\S+\s+/, ""), 50, 0, "Low", 50, 50, 50, "Ready for diagnostic", "Today",
+] as SeedRow])).values()].sort((a, b) => objectiveRank(a[0]) - objectiveRank(b[0]));
+
+const seedMastery: Record<"Biology" | "Chemistry", SeedRow[]> = {
+  Biology: biologySeedMastery,
   Chemistry: [
     ["2.1", "Atomic structure", 82, 12, "High", 91, 79, 76, "Secure", "6 days"],
     ["3.3", "Chemical bonding", 70, 7, "Medium", 79, 67, 64, "Shape explanations", "2 days"],
     ["7.1", "Equilibria", 48, 3, "Low", 65, 39, 40, "Application is weak", "Today"],
     ["14.2", "Organic mechanisms", 39, 2, "Low", 57, 31, 29, "Electron movement", "Today"],
   ],
-} as const;
+};
 
 export async function GET(request: Request) {
   const identity = await visitorIdentity(request);
@@ -78,17 +35,21 @@ export async function GET(request: Request) {
   const today = dateKey(new Date(now));
 
   await db.batch(seedMastery[subject].map((item) => db.prepare(`
-    INSERT OR IGNORE INTO mastery
+    INSERT INTO mastery
       (user_id, subject, code, topic, score, evidence, confidence, knowledge, application, exam, note, due, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, subject, code) DO UPDATE SET topic = excluded.topic
   `).bind(userId, subject, ...item, now)));
 
   const mastery = await db.prepare(`
     SELECT code, topic, score, evidence, confidence, knowledge, application, exam, note, due
     FROM mastery WHERE user_id = ? AND subject = ? ORDER BY code
   `).bind(userId, subject).all();
-  const activeCodes = new Set<string>(seedMastery[subject].map((item) => String(item[0])));
-  const storedMastery = (mastery.results as { code: string; due: string }[]).filter((item) => activeCodes.has(item.code));
+  const codeOrder = new Map(seedMastery[subject].map((item, index) => [String(item[0]), index]));
+  const activeCodes = new Set<string>(codeOrder.keys());
+  const storedMastery = (mastery.results as { code: string; due: string }[])
+    .filter((item) => activeCodes.has(item.code))
+    .sort((a, b) => (codeOrder.get(a.code) ?? 0) - (codeOrder.get(b.code) ?? 0));
   const normalizedMastery = storedMastery.map((item) => ({ ...item, due: normalizeReviewDate(item.due, today) }));
   const attemptRows = await db.prepare(`SELECT question_id, objective_code, correct, confidence, used_hint
     FROM attempts WHERE user_id = ? AND subject = ? ORDER BY created_at DESC LIMIT 300`)

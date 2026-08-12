@@ -63,6 +63,25 @@ const formatLabels: Record<QuestionFormat, string> = {
   practical: "Practical planning",
 };
 
+const objectiveRank = (code: string) => {
+  const [, area = "", token = ""] = code.match(/^(\d|A|B)\(([a-z]+)\)$/) ?? [];
+  const areaRank = ["1", "2", "3", "4", "A", "B"].indexOf(area);
+  const tokenRank = token.length === 1 ? "abcdefghijklmnopqrstuvwxyz".indexOf(token) : 26 + ["aa", "bb", "cc", "dd"].indexOf(token);
+  return areaRank * 100 + tokenRank;
+};
+const biologyMasterySeed: MasteryItem[] = [...new Map(verifiedBiologyQuestions.map((question) => [question.code, {
+  code: question.code,
+  topic: question.objective.replace(/^\S+\s+/, ""),
+  score: 50,
+  note: "Ready for diagnostic",
+  due: "Today",
+  evidence: 0,
+  confidence: "Low" as Confidence,
+  knowledge: 50,
+  application: 50,
+  exam: 50,
+}])).values()].sort((a, b) => objectiveRank(a.code) - objectiveRank(b.code));
+
 const initialPackStates: PackState[] = pdfPipeline.map((pack) => ({
   packOrder: pack.order,
   name: pack.name,
@@ -71,63 +90,18 @@ const initialPackStates: PackState[] = pdfPipeline.map((pack) => ({
   releaseNote: "",
   updatedAt: "",
 }));
+const biologyFileItems: FileItem[] = [
+  ...pdfPipeline.map((pack) => ({
+    name: `${pack.order}. ${pack.name}`,
+    meta: `${pack.pages} PDF pages · ${pack.questions} multi-format questions`,
+    tag: "Adaptive pack",
+    status: "Ready",
+  })),
+  { name: "9744 H2 Biology syllabus.pdf", meta: "99 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
+];
 
 const initialMastery: Record<Subject, MasteryItem[]> = {
-  Biology: [
-    { code: "1(e)", topic: "Viral structures", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(f)", topic: "Viruses, life and cell theory", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(g)", topic: "Biomolecule monomers", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(h)", topic: "Biological bonds", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(i)", topic: "Structure and function", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(j)", topic: "Fluid mosaic membrane", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(k)", topic: "Membrane functions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(l)", topic: "Membrane transport", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(p)", topic: "Enzyme action", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(q)", topic: "Enzyme investigations", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(r)", topic: "Inhibitor binding", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(s)", topic: "Inhibitor effects", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(t)", topic: "Stem-cell potency", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "1(u)", topic: "Stem-cell functions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(a)", topic: "DNA replication", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(b)", topic: "Gene expression", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(d)", topic: "Genome organisation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(e)", topic: "Viral reproductive cycles", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(f)", topic: "Viral genome variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(g)", topic: "Prokaryotic genetic variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(h)", topic: "Eukaryotic non-coding DNA", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(i)", topic: "Eukaryotic gene regulation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(k)", topic: "Molecular DNA techniques", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(l)", topic: "Mutation and chromosome aberration", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(m)", topic: "Mutation and genetic disease", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(n)", topic: "Mitotic cell cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(o)", topic: "Mitosis significance and control", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(p)", topic: "Cancer risk factors", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(q)", topic: "Oncogenes and tumour suppressors", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(r)", topic: "Multi-step cancer development", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(s)", topic: "Meiotic cell cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(t)", topic: "Meiosis and variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(u)", topic: "Genetic terminology", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(v)", topic: "Inheritance through gametes", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(w)", topic: "Genotype and phenotype", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(x)", topic: "Genetic diagrams", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(y)", topic: "Test crosses", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(z)", topic: "Linkage and crossing over", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(aa)", topic: "Epistasis", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(bb)", topic: "Environmental effects on phenotype", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(cc)", topic: "Continuous and discontinuous variation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "2(dd)", topic: "Chi-squared tests", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(a)", topic: "Energy organelles", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(b)", topic: "Photosynthetic spectra", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(c)", topic: "Light-dependent reactions", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(d)", topic: "Calvin cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(e)", topic: "Photosynthesis investigations", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(f)", topic: "Glycolysis", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(g)", topic: "Link reaction and Krebs cycle", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(h)", topic: "Oxidative phosphorylation", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(i)", topic: "Anaerobic respiration", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(j)", topic: "NAD regeneration", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-    { code: "3(l)", topic: "Chemiosmosis", score: 50, note: "Ready for diagnostic", due: "Today", evidence: 0, confidence: "Low", knowledge: 50, application: 50, exam: 50 },
-  ],
+  Biology: biologyMasterySeed,
   Chemistry: [
     { code: "2.1", topic: "Atomic structure", score: 82, note: "Secure", due: "6 days", evidence: 12, confidence: "High", knowledge: 91, application: 79, exam: 76 },
     { code: "3.3", topic: "Chemical bonding", score: 70, note: "Shape explanations", due: "2 days", evidence: 7, confidence: "Medium", knowledge: 79, application: 67, exam: 64 },
@@ -137,153 +111,7 @@ const initialMastery: Record<Subject, MasteryItem[]> = {
 };
 
 const questions: Record<Subject, Question[]> = {
-  Biology: [
-    ...verifiedBiologyQuestions,
-    {
-      id: "bio-membrane-fluidity",
-      code: "4.1",
-      eyebrow: "Adaptive check · application",
-      objective: "4.1 Cell membranes",
-      marks: 1,
-      skill: "Application",
-      difficulty: 2,
-      prompt: "Which change would increase the fluidity of a cell membrane at a low temperature?",
-      options: [
-        "More saturated fatty acids",
-        "More unsaturated fatty acids",
-        "Longer fatty acid chains",
-        "Fewer membrane proteins",
-      ],
-      answer: 1,
-      hint: "Think about which fatty-acid shape prevents phospholipids packing closely.",
-      misconception: "Membrane structure–property link",
-      explanation: "Unsaturated fatty acids contain kinks that prevent phospholipids packing closely, helping the membrane remain fluid at low temperature.",
-      source: "4. Cellular Transport.pdf · membrane structure",
-    },
-    {
-      id: "bio-grana",
-      code: "12.1",
-      eyebrow: "Image reasoning · unfamiliar context",
-      objective: "12.1 Photosynthesis",
-      marks: 2,
-      skill: "Image",
-      difficulty: 2,
-      prompt: "The highlighted structure contains stacks of membranes. Which process occurs there, and why is this arrangement useful?",
-      options: [
-        "Calvin cycle; it traps carbon dioxide",
-        "Light-dependent reactions; it provides a large surface area",
-        "Glycolysis; it keeps enzymes separated",
-        "Protein synthesis; it stores ribosomes",
-      ],
-      answer: 1,
-      hint: "Identify the thylakoid membrane and ask what proteins it holds.",
-      misconception: "Chloroplast compartment confusion",
-      explanation: "Thylakoid membranes form grana. Their large surface area holds chlorophyll, electron carriers and ATP synthase for the light-dependent reactions.",
-      source: "5. Photosynthesis.pdf · p. 8 · Fig. 2.1",
-      visual: "chloroplast",
-    },
-    {
-      id: "bio-enzyme-denaturation",
-      code: "5.2",
-      eyebrow: "Exam technique · explain",
-      objective: "5.2 Enzyme kinetics",
-      marks: 3,
-      skill: "Exam technique",
-      difficulty: 2,
-      prompt: "Why does the rate of an enzyme-controlled reaction decrease rapidly above the optimum temperature?",
-      options: [
-        "The substrate evaporates immediately",
-        "The enzyme runs out of activation energy",
-        "Bonds maintaining tertiary structure break and the active site changes",
-        "The enzyme molecules stop moving",
-      ],
-      answer: 2,
-      hint: "A complete explanation must link molecular bonds, shape and enzyme–substrate complexes.",
-      misconception: "Denaturation explanation",
-      explanation: "For full credit, connect heat to broken bonds, altered tertiary structure, a changed active site and fewer enzyme–substrate complexes.",
-      source: "3. Enzymes.pdf · temperature and enzyme activity",
-    },
-    {
-      id: "bio-osmosis",
-      code: "4.1",
-      eyebrow: "Follow-up · transfer",
-      objective: "4.1 Cell membranes",
-      marks: 2,
-      skill: "Application",
-      difficulty: 3,
-      prompt: "A plant cell is placed in a solution with lower water potential than its cytoplasm. What happens first?",
-      options: ["Water enters and turgor rises", "Water leaves by osmosis", "Solute leaves by active transport", "The cell wall dissolves"],
-      answer: 1,
-      hint: "Water moves from higher to lower water potential through a partially permeable membrane.",
-      misconception: "Direction of osmosis",
-      explanation: "Water moves out of the cell down the water-potential gradient. The protoplast begins to lose volume and may eventually pull from the cell wall.",
-      source: "4. Cellular Transport.pdf · water potential",
-    },
-    {
-      id: "bio-enzyme-inhibitor",
-      code: "5.2",
-      eyebrow: "Adaptive follow-up · graph logic",
-      objective: "5.2 Enzyme kinetics",
-      marks: 2,
-      skill: "Application",
-      difficulty: 3,
-      prompt: "An inhibitor lowers the initial reaction rate, but the same maximum rate is reached at very high substrate concentration. Which interpretation is best?",
-      options: ["Irreversible inhibition", "Competitive inhibition", "Non-competitive inhibition", "The enzyme has denatured"],
-      answer: 1,
-      hint: "Ask whether extra substrate can overcome the inhibitor's effect.",
-      misconception: "Competitive versus non-competitive inhibition",
-      explanation: "A competitive inhibitor can be outcompeted at high substrate concentration, so the original maximum rate can still be reached.",
-      source: "3. Enzymes.pdf · enzyme inhibition",
-    },
-    {
-      id: "bio-prokaryote",
-      code: "1.2",
-      eyebrow: "Retrieval · discriminate",
-      objective: "1.2 Cell structure",
-      marks: 1,
-      skill: "Knowledge",
-      difficulty: 1,
-      prompt: "Which structure is present in a typical prokaryotic cell but absent from animal cells?",
-      options: ["80S ribosome", "Circular naked DNA", "Mitochondrion", "Golgi apparatus"],
-      answer: 1,
-      hint: "Focus on how the main genetic material is organised.",
-      misconception: "Prokaryote–eukaryote distinction",
-      explanation: "Prokaryotes usually possess circular DNA that is not enclosed within a nucleus and is not associated with histones in the same way as eukaryotic nuclear DNA.",
-      source: "TMJC H2 Biology notes · Cell structure",
-    },
-    {
-      id: "bio-calvin-cycle",
-      code: "12.1",
-      eyebrow: "Retrieval · process link",
-      objective: "12.1 Photosynthesis",
-      marks: 2,
-      skill: "Knowledge",
-      difficulty: 2,
-      prompt: "Which products of the light-dependent reactions are used directly in the Calvin cycle?",
-      options: ["O₂ and glucose", "ATP and reduced NADP", "RuBP and carbon dioxide", "Water and chlorophyll"],
-      answer: 1,
-      hint: "The Calvin cycle needs both chemical energy and reducing power.",
-      misconception: "Link between photosynthetic stages",
-      explanation: "ATP supplies energy and reduced NADP supplies hydrogen/electrons for reduction in the Calvin cycle.",
-      source: "5. Photosynthesis.pdf · p. 8 · Fig. 2.1",
-    },
-    {
-      id: "bio-fluid-mosaic",
-      code: "4.1",
-      eyebrow: "Exam language · explain evidence",
-      objective: "4.1 Cell membranes",
-      marks: 2,
-      skill: "Exam technique",
-      difficulty: 2,
-      prompt: "Why is the cell-surface membrane described as a fluid mosaic?",
-      options: ["It is entirely liquid", "Proteins float randomly outside the bilayer", "Components move laterally and proteins form a varied pattern", "Phospholipids constantly leave the cell"],
-      answer: 2,
-      hint: "Explain both words in the name: fluid and mosaic.",
-      misconception: "Fluid mosaic terminology",
-      explanation: "Phospholipids and some proteins can move laterally, producing fluidity; the varied arrangement of embedded proteins forms a mosaic.",
-      source: "4. Cellular Transport.pdf · fluid mosaic model",
-    },
-  ],
+  Biology: verifiedBiologyQuestions,
   Chemistry: [
     {
       id: "chem-equilibrium-pressure",
@@ -517,22 +345,7 @@ export default function Home() {
   const [registering, setRegistering] = useState(false);
   const [activity, setActivity] = useState<ActivityData | null>(null);
   const [activityLoading, setActivityLoading] = useState(true);
-  const [files, setFiles] = useState<FileItem[]>([
-    { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "7. The Cell Cycle.pdf", meta: "60 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "8. DNA Replication & Gene Expression.pdf", meta: "52 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "9. DNA Mutations & Its Consequences.pdf", meta: "39 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "10. Molecular Techniques in DNA Analysis.pdf", meta: "27 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "11. OCGE in Eukaryotes & Stem Cell.pdf", meta: "96 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "12. Viruses.pdf", meta: "42 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "13. OCGE in Prokaryotes (Bacteria).pdf", meta: "44 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "14. Inheritance.pdf", meta: "75 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-    { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
-  ]);
+  const [files, setFiles] = useState<FileItem[]>(biologyFileItems);
   const fileInput = useRef<HTMLInputElement>(null);
   const currentMastery = masteryState[subject];
   const average = Math.round(currentMastery.reduce((sum, item) => sum + item.score, 0) / currentMastery.length);
@@ -559,7 +372,10 @@ export default function Home() {
   }, [liveBiologyQuestions, practiceMastery]);
   const livePackCount = packStates.filter((pack) => pack.status === "Live").length;
   const draftPackCount = packStates.filter((pack) => pack.status === "Draft").length;
+  const mappedObjectiveCount = syllabusAreas.reduce((total, area) => total + area.outcomes, 0);
+  const sourcedObjectiveCount = syllabusAreas.reduce((total, area) => total + area.sourced, 0);
   const verifiedObjectiveCount = syllabusAreas.reduce((total, area) => total + area.verified, 0);
+  const missingObjectiveCount = mappedObjectiveCount - sourcedObjectiveCount;
   const restingCount = currentMastery.length - practiceMastery.length;
 
   const weakTopic = useMemo(() => [...currentMastery].sort((a, b) => a.score - b.score)[0], [currentMastery]);
@@ -593,22 +409,7 @@ export default function Home() {
       setPackAdmin(Boolean(packs.isAdmin));
       setStudentProfile(student.profile as StudentProfile | null);
       setProfileLoaded(true);
-      const base: FileItem[] = subject === "Biology" ? [
-        { name: "2. Biomolecules.pdf", meta: "94 PDF pages · 9 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "3. Enzymes.pdf", meta: "38 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "4. Cellular Transport.pdf", meta: "25 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "5. Photosynthesis.pdf", meta: "40 PDF pages · 7 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "6. Cellular Respiration.pdf", meta: "24 PDF pages · 8 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "7. The Cell Cycle.pdf", meta: "60 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "8. DNA Replication & Gene Expression.pdf", meta: "52 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "9. DNA Mutations & Its Consequences.pdf", meta: "39 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "10. Molecular Techniques in DNA Analysis.pdf", meta: "27 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "11. OCGE in Eukaryotes & Stem Cell.pdf", meta: "96 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "12. Viruses.pdf", meta: "42 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "13. OCGE in Prokaryotes (Bacteria).pdf", meta: "44 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "14. Inheritance.pdf", meta: "75 PDF pages · 6 source figures · 30 multi-format questions", tag: "Adaptive pack", status: "Ready" },
-        { name: "9477 H2 Biology syllabus.pdf", meta: "101 content outcomes · 4 practical skill areas", tag: "Syllabus", status: "Ready" },
-      ] : [
+      const base: FileItem[] = subject === "Biology" ? biologyFileItems : [
         { name: "H2 Chemistry course materials", meta: "Awaiting source pack", tag: "Source pack", status: "Needed" },
         { name: "9476 H2 Chemistry syllabus.pdf", meta: "2026 exam pack · active", tag: "Syllabus", status: "Ready" },
       ];
@@ -870,7 +671,7 @@ export default function Home() {
           {nav.filter((item) => item.id !== "activity" || packAdmin).map((item) => (
             <button key={item.id} className={view === item.id ? "nav-item active" : "nav-item"} onClick={() => { setView(item.id); setSession(false); }}>
               <span>{item.icon}</span>{item.label}
-              {item.id === "pipeline" && subject === "Biology" && <em>17</em>}
+              {item.id === "pipeline" && subject === "Biology" && <em>18</em>}
             </button>
           ))}
         </nav>
@@ -879,7 +680,7 @@ export default function Home() {
         <div className="exam-card">
           <div className="exam-card-head"><span>Exam countdown</span><b>42 days</b></div>
           <strong>Singapore–Cambridge</strong>
-          <p>H2 {subject} · {subject === "Biology" ? "9477" : "9476"}</p>
+          <p>H2 {subject} · {subject === "Biology" ? "9744" : "9476"}</p>
           <div className="mini-progress"><span style={{ width: `${average}%` }} /></div>
           <small>{average}% syllabus mastery</small>
         </div>
@@ -1058,10 +859,10 @@ export default function Home() {
           </section>
         ) : view === "map" ? (
           <section className="page-content map-page">
-            <div className="page-heading"><div><p>Singapore–Cambridge · H2 {subject === "Biology" ? "9477" : "9476"} · 2026</p><h1>{subject === "Biology" ? "Complete syllabus map" : "Syllabus mastery map"}</h1><span>{subject === "Biology" ? "Coverage tells you what the sources contain; mastery tells you what you can reliably do." : "Mastery and evidence confidence are separate, so an early estimate never looks final."}</span></div><button className="primary-button" onClick={() => startSession("practice")}>Practise weak areas →</button></div>
+            <div className="page-heading"><div><p>Singapore–Cambridge · H2 {subject === "Biology" ? "9744" : "9476"} · 2026</p><h1>{subject === "Biology" ? "Complete syllabus map" : "Syllabus mastery map"}</h1><span>{subject === "Biology" ? "Coverage tells you what the sources contain; mastery tells you what you can reliably do." : "Mastery and evidence confidence are separate, so an early estimate never looks final."}</span></div><button className="primary-button" onClick={() => startSession("practice")}>Practise weak areas →</button></div>
             {subject === "Biology" ? (
               <>
-                <div className="coverage-summary"><article><b>101</b><span>Content outcomes mapped</span></article><article><b>96</b><span>Covered by supplied PDFs</span></article><article><b>{verifiedObjectiveCount}</b><span>Objectives fully verified</span></article><article className="missing"><b>5</b><span>Missing source outcomes</span></article></div>
+                <div className="coverage-summary"><article><b>{mappedObjectiveCount}</b><span>Content outcomes mapped</span></article><article><b>{sourcedObjectiveCount}</b><span>Covered by supplied PDFs</span></article><article><b>{verifiedObjectiveCount}</b><span>Objectives fully verified</span></article><article className="missing"><b>{missingObjectiveCount}</b><span>Missing source outcomes</span></article></div>
                 <article className="panel coverage-table">
                   <div className="coverage-header"><span>Syllabus area</span><span>Outcomes</span><span>Source coverage</span><span>Verification</span></div>
                   {syllabusAreas.map((area) => (
@@ -1094,7 +895,7 @@ export default function Home() {
               <article className="panel release-flow"><div><b>1</b><span><strong>Draft</strong><small>PDF indexed and syllabus mapped</small></span></div><i>→</i><div><b>2</b><span><strong>Verified</strong><small>Questions, mark points and pages checked</small></span></div><i>→</i><div><b>3</b><span><strong>Live</strong><small>Versioned pack enters adaptive practice</small></span></div></article>
               {packNotice && <div className="pack-notice" role="status">{packNotice}</div>}
               <article className="pipeline-warning"><span>!</span><div><strong>Two source gaps remain visible</strong><p>Cell Structure outcomes 1(a)–1(d) have no supplied PDF, and Cellular Respiration does not cover investigation outcome 3(k). Aster leaves them unverified instead of inferring evidence.</p></div></article>
-              <article className="panel pipeline-table"><div className="pipeline-header"><span>Content pack</span><span>9477 mapping</span><span>Question design</span><span>Release</span><span>{packAdmin ? "Owner action" : "Next gate"}</span></div>{pdfPipeline.map((file) => { const pack = packStates.find((item) => item.packOrder === file.order) ?? initialPackStates.find((item) => item.packOrder === file.order)!; const mature = file.questions >= 30; const working = packSaving === file.order; const nextStatus: PackStatus | null = pack.status === "Draft" && file.questions ? "Verified" : pack.status === "Verified" ? "Live" : pack.status === "Live" ? "Draft" : null; return <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.pages} pages · {file.images} figures</small></div></div><b>{file.mapping}</b><p>{file.questions ? `${file.questions} questions · ${mature ? "6 formats" : "MCQ seed"}` : "Question drafting not started"}</p><em className={pack.status.toLowerCase()}>{pack.status === "Live" ? `● Live v${pack.version}` : pack.status === "Verified" ? `◐ Verified v${pack.version}` : `○ Draft v${pack.version}`}</em><div className="pack-gate"><small>{mature ? "Monitor student evidence" : pack.status === "Live" ? "Add structured, data and image variants" : file.questions ? "Source-check before release" : "Draft questions first"}</small>{packAdmin && <button disabled={!nextStatus || working} onClick={() => nextStatus && updatePack(file.order, nextStatus)}>{working ? "Saving…" : nextStatus === "Verified" ? "Mark verified" : nextStatus === "Live" ? "Publish" : nextStatus === "Draft" ? "Unpublish" : "Needs questions"}</button>}</div></div>; })}</article>
+              <article className="panel pipeline-table"><div className="pipeline-header"><span>Content pack</span><span>9744 mapping</span><span>Question design</span><span>Release</span><span>{packAdmin ? "Owner action" : "Next gate"}</span></div>{pdfPipeline.map((file) => { const pack = packStates.find((item) => item.packOrder === file.order) ?? initialPackStates.find((item) => item.packOrder === file.order)!; const mature = file.questions >= 30; const working = packSaving === file.order; const nextStatus: PackStatus | null = pack.status === "Draft" && file.questions ? "Verified" : pack.status === "Verified" ? "Live" : pack.status === "Live" ? "Draft" : null; return <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.pages} pages · {file.images} figures</small></div></div><b>{file.mapping}</b><p>{file.questions ? `${file.questions} questions · ${mature ? "6 formats" : "MCQ seed"}` : "Question drafting not started"}</p><em className={pack.status.toLowerCase()}>{pack.status === "Live" ? `● Live v${pack.version}` : pack.status === "Verified" ? `◐ Verified v${pack.version}` : `○ Draft v${pack.version}`}</em><div className="pack-gate"><small>{mature ? "Monitor student evidence" : pack.status === "Live" ? "Add structured, data and image variants" : file.questions ? "Source-check before release" : "Draft questions first"}</small>{packAdmin && <button disabled={!nextStatus || working} onClick={() => nextStatus && updatePack(file.order, nextStatus)}>{working ? "Saving…" : nextStatus === "Verified" ? "Mark verified" : nextStatus === "Live" ? "Publish" : nextStatus === "Draft" ? "Unpublish" : "Needs questions"}</button>}</div></div>; })}</article>
             </> : <article className="panel empty-pipeline"><span>＋</span><h3>No Chemistry source pack yet</h3><p>Upload the coursebook and syllabus to create the same source-to-objective pipeline.</p><button className="primary-button" onClick={() => fileInput.current?.click()}>Upload material</button></article>}
           </section>
         ) : view === "library" ? (
@@ -1108,13 +909,13 @@ export default function Home() {
           </section>
         ) : view === "activity" ? (
           <section className="page-content teacher-page">
-            <div className="page-heading"><div><p>Owner-only learning evidence</p><h1>Teacher Activity</h1><span>See who is practising, where they are secure and which objectives need support.</span></div><div className="class-code"><small>Student class code</small><strong>{activity?.classCode ?? "ASTER9477"}</strong></div></div>
+            <div className="page-heading"><div><p>Owner-only learning evidence</p><h1>Teacher Activity</h1><span>See who is practising, where they are secure and which objectives need support.</span></div><div className="class-code"><small>Student class code</small><strong>{activity?.classCode ?? "ASTER9744"}</strong></div></div>
             <div className="activity-summary"><article><span>Students</span><b>{activity?.summary.students ?? 0}</b><small>joined this class</small></article><article><span>Questions answered</span><b>{activity?.summary.attempts ?? 0}</b><small>saved across students</small></article><article><span>Active in 7 days</span><b>{activity?.summary.activeRecently ?? 0}</b><small>recent learners</small></article><article><span>Average accuracy</span><b>{activity?.summary.averageAccuracy ?? 0}%</b><small>across saved attempts</small></article></div>
             <article className="panel activity-table">
               <div className="activity-header"><span>Student</span><span>Practice</span><span>Accuracy</span><span>Mastered</span><span>Needs support</span><span>Last active</span></div>
               {activityLoading ? <div className="activity-empty"><strong>Loading student activity…</strong></div> : activity?.students.length ? activity.students.map((student, index) => (
                 <div className="activity-row" key={`${student.classCode}-${student.displayName}-${index}`}><div><span>{student.displayName[0]?.toUpperCase()}</span><strong>{student.displayName}</strong><small>{student.classCode}</small></div><b>{student.attempts} questions</b><div className="activity-accuracy"><span><i style={{ width: `${student.accuracy}%` }} /></span><b>{student.accuracy}%</b></div><em>{student.mastered} objectives</em><p>{student.weak.length ? student.weak.join(" · ") : "No evidence yet"}</p><time>{activityTime(student.lastActive)}</time></div>
-              )) : <div className="activity-empty"><strong>No students have joined yet</strong><p>Send the public Aster link and class code <b>{activity?.classCode ?? "ASTER9477"}</b>. Their activity will appear here after registration.</p></div>}
+              )) : <div className="activity-empty"><strong>No students have joined yet</strong><p>Send the public Aster link and class code <b>{activity?.classCode ?? "ASTER9744"}</b>. Their activity will appear here after registration.</p></div>}
             </article>
           </section>
         ) : (

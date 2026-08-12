@@ -5,7 +5,8 @@ import { getStore } from "@/db/runtime";
 import { dateKey, reliableMastery } from "@/lib/adaptive.mjs";
 import { verifiedBiologyAnswerKey } from "@/lib/biology-content";
 
-const classCode = "ASTER9477";
+const classCode = "ASTER9744";
+const acceptedClassCodes = new Set([classCode, "ASTER9477"]);
 
 export async function GET(request: Request) {
   const db = await getStore();
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
   const displayName = payload.displayName?.trim().replace(/\s+/g, " ") ?? "";
   const suppliedCode = payload.classCode?.trim().toUpperCase() ?? "";
   if (displayName.length < 2 || displayName.length > 40) return visitorJson({ error: "Enter a name between 2 and 40 characters" }, identity, { status: 400 });
-  if (suppliedCode !== classCode) return visitorJson({ error: "Class code not recognised" }, identity, { status: 400 });
+  if (!acceptedClassCodes.has(suppliedCode)) return visitorJson({ error: "Class code not recognised" }, identity, { status: 400 });
 
   const db = await getStore();
   const now = new Date().toISOString();
