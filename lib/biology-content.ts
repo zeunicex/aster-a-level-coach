@@ -519,7 +519,7 @@ export const respirationQuestions: BiologyQuestion[] = [
     id: "bio-resp-initial-rate", code: "3(k)", eyebrow: "9744 practical · initial rate", objective: "3(k) Respiration investigations", marks: 2, skill: "Application", difficulty: 2,
     prompt: "Why should initial oxygen-uptake rate be compared when testing respiratory substrates?", options: ["Substrate depletion and product accumulation have had minimal effect", "Every respirometer has reached equilibrium", "Temperature no longer matters", "It guarantees identical organisms"], answer: 0,
     hint: "Use the earliest linear part of each time course.", misconception: "Choosing a valid respiratory rate", explanation: "An initial rate gives the fairest comparison before the reaction mixture changes substantially.",
-    source: "9744 H2 Biology syllabus.pdf · PDF p.18", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
+    source: "Cellular Respiration.pdf pack supplement · Nuffield Practical Biology respirometer protocol", sourceUrl: "https://practicalbiology.org/energy/gas-balance-in-respiration-and-photosynthesis/measuring-the-rate-of-metabolism.html", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
   },
   {
     id: "bio-resp-yeast-products", code: "3(i)", eyebrow: "Verified source · pathway products", objective: "3(i) Anaerobic respiration", marks: 1, skill: "Knowledge", difficulty: 1,
@@ -617,7 +617,7 @@ export const respirationQuestions: BiologyQuestion[] = [
     prompt: "Which substrate supports the greatest initial respiration rate?", data: { headers: ["Substrate", "O₂ uptake at 0 min", "O₂ uptake at 5 min"], rows: [["Glucose", "0.0", "2.8"], ["Starch", "0.0", "0.7"], ["No substrate", "0.0", "0.2"]] },
     options: ["Glucose, because its oxygen-uptake gradient is steepest", "Starch", "No substrate", "All are equal"], answer: 0,
     hint: "Calculate change per unit time, not only the final label.", misconception: "Interpreting respirometer data", explanation: "Glucose produces the largest oxygen decrease over the same interval and therefore the greatest initial aerobic respiration rate.",
-    source: "9744 H2 Biology syllabus.pdf · PDF p.18", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
+    source: "Cellular Respiration.pdf pack supplement · Rockefeller University RockEDU yeast substrate protocol", sourceUrl: "https://rockedu.rockefeller.edu/component/testing-substrate-specificity-yeast-fermentation/", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
   },
   {
     id: "bio-resp-temperature-practical", code: "3(k)", eyebrow: "Practical · respiration rate", objective: "3(k) Respiration investigations", marks: 4, skill: "Exam technique", difficulty: 3, format: "practical",
@@ -625,7 +625,7 @@ export const respirationQuestions: BiologyQuestion[] = [
     markPoints: ["Use equal masses and germination stages of seeds at several thermostatically controlled temperatures", "Use carbon-dioxide absorbent and measure oxygen-related manometer displacement per unit time", "Keep apparatus volume, acclimatisation time and measurement interval constant and include a non-respiring control", "Repeat each temperature and compare mean initial rates"],
     modelAnswer: "Place equal masses of equally germinated seeds in sealed respirometers with carbon-dioxide absorbent at controlled temperatures. After acclimatisation, measure manometer displacement per unit time, using matched non-respiring controls and repeats to calculate mean initial rates.",
     hint: "Control biological material and apparatus, then measure an initial rate reliably.", misconception: "Planning a respiration investigation", explanation: "The plan isolates temperature and measures oxygen uptake while controlling pressure changes not caused by respiration.",
-    source: "9744 H2 Biology syllabus.pdf · PDF p.18", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
+    source: "Cellular Respiration.pdf pack supplement · Nuffield Practical Biology respirometer protocol", sourceUrl: "https://practicalbiology.org/energy/gas-balance-in-respiration-and-photosynthesis/measuring-the-rate-of-metabolism.html", sourceImage: "/materials/syllabus-9744/page-18.jpg", sourcePage: 18,
   },
   {
     id: "bio-resp-fermentation-sequence", code: "3(j)", eyebrow: "Sequence · NAD regeneration", objective: "3(j) NAD regeneration", marks: 3, skill: "Application", difficulty: 2, format: "sequence",

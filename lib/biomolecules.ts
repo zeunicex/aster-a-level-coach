@@ -17,6 +17,7 @@ export type BiomoleculeQuestion = {
   misconception: string;
   explanation: string;
   source: string;
+  sourceUrl?: string;
   sourceImage: string;
   sourcePage: number;
 };

@@ -5,7 +5,7 @@ import {
   biomoleculeQuestions, cellCycleQuestions, cellQuestions, climateQuestions, communicationQuestions,
   enzymeQuestions, eukaryoteQuestions, evolutionQuestions, geneExpressionQuestions, immunityQuestions,
   inheritanceQuestions, mutationQuestions, pdfPipeline, photosynthesisQuestions, practicalSkills,
-  prokaryoteQuestions, respirationQuestions, syllabusAreas, techniqueQuestions, transportQuestions,
+  packOrderForSource, prokaryoteQuestions, respirationQuestions, syllabusAreas, techniqueQuestions, transportQuestions,
   verifiedBiologyQuestions, virusQuestions,
 } from "../lib/biology-content.ts";
 
@@ -70,4 +70,7 @@ test("9744 remaps close the former protein, central-dogma, operon, respiration a
     assert.ok(verifiedBiologyQuestions.filter((question) => question.code === code).length >= 3, code);
   }
   assert.equal(new Set(respirationQuestions.map((question) => question.format ?? "mcq")).size, 6);
+  const respirationPracticals = verifiedBiologyQuestions.filter((question) => question.code === "3(k)");
+  assert.ok(respirationPracticals.every((question) => question.sourceUrl?.startsWith("https://")));
+  assert.ok(respirationPracticals.every((question) => packOrderForSource(question.source) === 6));
 });
