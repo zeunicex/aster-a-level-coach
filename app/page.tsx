@@ -4,9 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, isReviewDue, nextReviewDate, objectiveNeedsPractice, pickNextQuestion, reviewLabel } from "@/lib/adaptive.mjs";
 import { packOrderForSource, pdfPipeline, practicalSkills, syllabusAreas, verifiedBiologyQuestions, type PackStatus } from "@/lib/biology-content";
 import { gradeStructuredAnswer } from "@/lib/marking.mjs";
+import { buildQuestionQualityReport, masteryPolicy, runStructuredScoringBenchmark } from "@/lib/quality.mjs";
 
 type Subject = "Biology" | "Chemistry";
-type View = "today" | "map" | "pipeline" | "library" | "progress" | "activity";
+type View = "today" | "map" | "pipeline" | "quality" | "library" | "progress" | "activity";
 type Confidence = "Low" | "Medium" | "High";
 type Skill = "Knowledge" | "Application" | "Image" | "Exam technique";
 type SessionKind = "quick" | "practice" | "diagnostic";
@@ -40,7 +41,7 @@ type Question = {
   data?: { headers: string[]; rows: string[][] };
   passage?: string;
   apparatus?: string[];
-  calibration?: { paper: "Paper 2" | "Paper 3" | "Paper 4"; commandWords: string; basis: string; status: "Provisional" | "Past-paper calibrated" };
+  calibration?: { paper: "Paper 2" | "Paper 3" | "Paper 4"; commandWords: string; basis: string; status: "Provisional" | "Past-paper calibrated"; year?: number; question?: string };
   masteryCredit?: boolean;
   markPoints?: string[];
   modelAnswer?: string;
@@ -274,10 +275,14 @@ const nav: { id: View; label: string; icon: string }[] = [
   { id: "today", label: "Today", icon: "⌂" },
   { id: "map", label: "Syllabus map", icon: "◎" },
   { id: "pipeline", label: "Content pipeline", icon: "◫" },
+  { id: "quality", label: "Calibration & QC", icon: "◇" },
   { id: "library", label: "My materials", icon: "▤" },
   { id: "progress", label: "Progress", icon: "↗" },
   { id: "activity", label: "Teacher activity", icon: "◉" },
 ];
+
+const biologyQuality = buildQuestionQualityReport(verifiedBiologyQuestions);
+const scoringBenchmark = runStructuredScoringBenchmark();
 
 function Ring({ value, size = 42 }: { value: number; size?: number }) {
   return (
@@ -679,7 +684,7 @@ export default function Home() {
 
         <nav aria-label="Main navigation">
           <p className="nav-label">Study</p>
-          {nav.filter((item) => item.id !== "activity" || packAdmin).map((item) => (
+          {nav.filter((item) => !["activity", "quality"].includes(item.id) || packAdmin).map((item) => (
             <button key={item.id} className={view === item.id ? "nav-item active" : "nav-item"} onClick={() => { setView(item.id); setSession(false); }}>
               <span>{item.icon}</span>{item.label}
               {item.id === "pipeline" && subject === "Biology" && <em>18</em>}
@@ -911,6 +916,38 @@ export default function Home() {
               {packNotice && <div className="pack-notice" role="status">{packNotice}</div>}
               <article className="panel pipeline-table"><div className="pipeline-header"><span>Content pack</span><span>9744 mapping</span><span>Question design</span><span>Release</span><span>{packAdmin ? "Owner action" : "Next gate"}</span></div>{pdfPipeline.map((file) => { const pack = packStates.find((item) => item.packOrder === file.order) ?? initialPackStates.find((item) => item.packOrder === file.order)!; const mature = file.questions >= 30; const working = packSaving === file.order; const nextStatus: PackStatus | null = pack.status === "Draft" && file.questions ? "Verified" : pack.status === "Verified" ? "Live" : pack.status === "Live" ? "Draft" : null; return <div className="pipeline-row" key={file.order}><div><span>{file.order}</span><div><strong>{file.name}</strong><small>{file.pages} pages · {file.images} figures</small></div></div><b>{file.mapping}</b><p>{file.questions ? `${file.questions} questions · ${mature ? "6 formats" : "MCQ seed"}` : "Question drafting not started"}</p><em className={pack.status.toLowerCase()}>{pack.status === "Live" ? `● Live v${pack.version}` : pack.status === "Verified" ? `◐ Verified v${pack.version}` : `○ Draft v${pack.version}`}</em><div className="pack-gate"><small>{mature ? "Monitor student evidence" : pack.status === "Live" ? "Add structured, data and image variants" : file.questions ? "Source-check before release" : "Draft questions first"}</small>{packAdmin && <button disabled={!nextStatus || working} onClick={() => nextStatus && updatePack(file.order, nextStatus)}>{working ? "Saving…" : nextStatus === "Verified" ? "Mark verified" : nextStatus === "Live" ? "Publish" : nextStatus === "Draft" ? "Unpublish" : "Needs questions"}</button>}</div></div>; })}</article>
             </> : <article className="panel empty-pipeline"><span>＋</span><h3>No Chemistry source pack yet</h3><p>Upload the coursebook and syllabus to create the same source-to-objective pipeline.</p><button className="primary-button" onClick={() => fileInput.current?.click()}>Upload material</button></article>}
+          </section>
+        ) : view === "quality" ? (
+          <section className="page-content quality-page">
+            <div className="page-heading"><div><p>Owner-only exam evidence</p><h1>Calibration & quality control</h1><span>One gate now checks every question, the structured scorer and durable-mastery evidence before Aster claims reliability.</span></div><span className={`access-badge ${biologyQuality.errors.length ? "readonly" : "owner"}`}>{biologyQuality.errors.length ? `${biologyQuality.errors.length} blocking issues` : "QC gate passing"}</span></div>
+            <div className="quality-summary">
+              <article><span>Structural QC</span><b>{biologyQuality.ready}/{biologyQuality.total}</b><small>passing · {biologyQuality.warnings.length} non-blocking prompt-pattern warnings</small></article>
+              <article><span>Past-paper calibrated</span><b>{biologyQuality.calibration.calibrated}</b><small>{biologyQuality.calibration.provisional} provisional · {biologyQuality.calibration.syllabusAligned} syllabus-aligned</small></article>
+              <article><span>Scorer benchmark</span><b>{scoringBenchmark.passed}/{scoringBenchmark.total}</b><small>{scoringBenchmark.agreement}% exact agreement on the initial labelled set</small></article>
+              <article><span>Transfer questions</span><b>{biologyQuality.transfer}</b><small>{biologyQuality.longAnswer} long · {biologyQuality.unseen} unseen · {biologyQuality.apparatus} apparatus</small></article>
+            </div>
+            <div className="quality-grid">
+              <article className="panel quality-panel">
+                <div className="panel-heading"><div><h3>Calibration ladder</h3><p>A question can move upward only when its evidence is recorded.</p></div><b>9744 only</b></div>
+                <div className="calibration-ladder">
+                  <div><span>1</span><p><strong>Syllabus-aligned</strong><small>Official outcome, source page, format, marks and answer key checked.</small></p><b>{biologyQuality.calibration.syllabusAligned}</b></div>
+                  <div><span>2</span><p><strong>Provisional exam calibration</strong><small>Paper, command word and exam purpose specified; awaiting real-paper comparison.</small></p><b>{biologyQuality.calibration.provisional}</b></div>
+                  <div><span>3</span><p><strong>Past-paper calibrated</strong><small>Requires year, paper, question reference, marks and command-word evidence.</small></p><b>{biologyQuality.calibration.calibrated}</b></div>
+                </div>
+              </article>
+              <article className="panel quality-panel">
+                <div className="panel-heading"><div><h3>Durably mastered gate</h3><p>Short-term success can rest as Secure for now; only spaced transfer evidence becomes durable.</p></div><b>6 checks</b></div>
+                <ol className="mastery-gates">{masteryPolicy.map((rule, index) => <li key={rule}><span>{index + 1}</span>{rule}</li>)}</ol>
+              </article>
+            </div>
+            <article className="panel evidence-import">
+              <div><span>Next evidence import</span><h3>2024–2025 Paper 2, Paper 3 and answer books</h3><p>These are enough for the first real calibration pass. Aster will record year, paper, question, subpart, command word, marks, outcome and difficulty without publishing copyrighted full papers.</p></div>
+              <div><strong>Acceptance gate</strong><small>Real-paper reference present</small><small>Question structure compared</small><small>Marks and command word checked</small><small>Model answer independently reviewed</small></div>
+            </article>
+            <article className="panel benchmark-panel">
+              <div className="panel-heading"><div><h3>Structured scoring benchmark</h3><p>This small labelled set is a regression gate, not yet a claim of examiner-level agreement.</p></div><b>{scoringBenchmark.agreement}% initial agreement</b></div>
+              <div className="benchmark-list">{scoringBenchmark.results.map((sample) => <div key={sample.name}><span>{sample.pass ? "✓" : "×"}</span><strong>{sample.name}</strong><small>Expected {sample.expected.length} mark point{sample.expected.length === 1 ? "" : "s"} · awarded {sample.actual.length}</small></div>)}</div>
+            </article>
           </section>
         ) : view === "library" ? (
           <section className="page-content library-page">

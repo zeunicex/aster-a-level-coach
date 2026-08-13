@@ -4,6 +4,7 @@ import { seedContentPacks } from "@/db/packs";
 import { packOrderForSource, verifiedBiologyAnswerKey, verifiedBiologyQuestions } from "@/lib/biology-content";
 import { dateKey, evidenceConfidence, evidenceDelta, evidenceDeltaFromMarks, nextReviewDate, normalizeReviewDate, reliableMastery, secureForNow } from "@/lib/adaptive.mjs";
 import { gradeStructuredAnswer } from "@/lib/marking.mjs";
+import { isTransferQuestion } from "@/lib/quality.mjs";
 
 type SeedRow = [string, string, number, number, string, number, number, number, string, string];
 const objectiveRank = (code: string) => {
@@ -51,18 +52,22 @@ export async function GET(request: Request) {
     .filter((item) => activeCodes.has(item.code))
     .sort((a, b) => (codeOrder.get(a.code) ?? 0) - (codeOrder.get(b.code) ?? 0));
   const normalizedMastery = storedMastery.map((item) => ({ ...item, due: normalizeReviewDate(item.due, today) }));
-  const attemptRows = await db.prepare(`SELECT question_id, objective_code, correct, confidence, used_hint
-    FROM attempts WHERE user_id = ? AND subject = ? ORDER BY created_at DESC LIMIT 300`)
-    .bind(userId, subject).all<{ question_id: string; objective_code: string; correct: number; confidence: string; used_hint: number }>();
-  const attemptsByCode = new Map<string, { correct: boolean; confidence: string; usedHint: boolean; format: string }[]>();
+  const attemptRows = await db.prepare(`SELECT question_id, objective_code, correct, confidence, used_hint, created_at
+    FROM attempts WHERE user_id = ? AND subject = ? ORDER BY created_at DESC LIMIT 2000`)
+    .bind(userId, subject).all<{ question_id: string; objective_code: string; correct: number; confidence: string; used_hint: number; created_at: string }>();
+  const attemptsByCode = new Map<string, { questionId: string; correct: boolean; confidence: string; usedHint: boolean; format: string; createdAt: string; transfer: boolean }[]>();
   for (const attempt of attemptRows.results) {
-    if (verifiedBiologyAnswerKey[attempt.question_id]?.masteryCredit === false) continue;
+    const question = verifiedBiologyAnswerKey[attempt.question_id];
+    if (question?.masteryCredit === false) continue;
     const items = attemptsByCode.get(attempt.objective_code) ?? [];
-    if (items.length < 6) items.push({
+    if (items.length < 20) items.push({
+      questionId: attempt.question_id,
       correct: Boolean(attempt.correct),
       confidence: attempt.confidence,
       usedHint: Boolean(attempt.used_hint),
-      format: verifiedBiologyAnswerKey[attempt.question_id]?.format ?? "mcq",
+      format: question?.format ?? "mcq",
+      createdAt: attempt.created_at,
+      transfer: isTransferQuestion(question),
     });
     attemptsByCode.set(attempt.objective_code, items);
   }
@@ -155,21 +160,27 @@ export async function POST(request: Request) {
       .bind(updated.score, updated.evidence, updated.confidence, updated.knowledge, updated.application, updated.exam, updated.note, updated.due, now, userId, question.code),
   ]);
 
-  const recentRows = await db.prepare(`SELECT question_id, correct, confidence, used_hint FROM attempts
-    WHERE user_id = ? AND subject = 'Biology' AND objective_code = ? ORDER BY created_at DESC LIMIT 6`)
-    .bind(userId, question.code).all<{ question_id: string; correct: number; confidence: string; used_hint: number }>();
+  const recentRows = await db.prepare(`SELECT question_id, correct, confidence, used_hint, created_at FROM attempts
+    WHERE user_id = ? AND subject = 'Biology' AND objective_code = ? ORDER BY created_at DESC LIMIT 20`)
+    .bind(userId, question.code).all<{ question_id: string; correct: number; confidence: string; used_hint: number; created_at: string }>();
   const creditedRecent = recentRows.results.filter((attempt) => verifiedBiologyAnswerKey[attempt.question_id]?.masteryCredit !== false);
   const mastered = reliableMastery(updated, creditedRecent.map((attempt) => ({
+    questionId: attempt.question_id,
     correct: Boolean(attempt.correct),
     confidence: attempt.confidence,
     usedHint: Boolean(attempt.used_hint),
     format: verifiedBiologyAnswerKey[attempt.question_id]?.format ?? "mcq",
+    createdAt: attempt.created_at,
+    transfer: isTransferQuestion(verifiedBiologyAnswerKey[attempt.question_id]),
   })), dateKey(new Date(now)));
   const secure = !mastered && secureForNow(updated, creditedRecent.map((attempt) => ({
+    questionId: attempt.question_id,
     correct: Boolean(attempt.correct),
     confidence: attempt.confidence,
     usedHint: Boolean(attempt.used_hint),
     format: verifiedBiologyAnswerKey[attempt.question_id]?.format ?? "mcq",
+    createdAt: attempt.created_at,
+    transfer: isTransferQuestion(verifiedBiologyAnswerKey[attempt.question_id]),
   })), dateKey(new Date(now)));
 
   return visitorJson({ correct, delta, missedPoints, awardedPointIndexes: pointIndexes, mastery: { code: question.code, ...updated, mastered, secureForNow: secure, note: mastered ? "Durably mastered · resting until review" : secure ? "Secure for now · spaced review scheduled" : updated.note } }, identity);

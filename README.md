@@ -13,6 +13,8 @@ Live site: <https://aster-a-level-coach.ezbzz.chatgpt.site/>
 - six question formats across mature packs
 - rubric-based marking for structured and practical questions
 - adaptive practice that skips reliably mastered content
+- a shared question-QC, scoring benchmark, and past-paper calibration gate
+- durable mastery that requires spaced, multi-format transfer evidence
 - first-time student registration and teacher activity reporting
 - Cloudflare D1 and R2 bindings managed by OpenAI Sites
 
@@ -50,6 +52,7 @@ student exports. These are excluded by `.gitignore`.
 - `npm run dev` — start local development
 - `npm test` — build and run the automated checks
 - `npm run lint` — run code-quality checks
+- `npm run qc` — run the exam-quality, structured-scoring, and mastery gates
 - `npm run db:generate` — generate a migration after a database schema change
 
 ## Project map

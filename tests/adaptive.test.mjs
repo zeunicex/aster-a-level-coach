@@ -44,14 +44,17 @@ test("rests well-assessed objectives until their scheduled review", () => {
 test("requires stable independent success across multiple formats before mastery", () => {
   const objective = { score: 84, evidence: 11, confidence: "High", due: "2026-09-10" };
   const mixed = [
-    { correct: true, usedHint: false, confidence: "High", format: "structured" },
-    { correct: true, usedHint: false, confidence: "Medium", format: "mcq" },
-    { correct: true, usedHint: false, confidence: "High", format: "data" },
-    { correct: true, usedHint: false, confidence: "High", format: "mcq" },
+    { questionId: "q4", correct: true, usedHint: false, confidence: "High", format: "structured", createdAt: "2026-08-11T08:00:00Z", transfer: true },
+    { questionId: "q3", correct: true, usedHint: false, confidence: "Medium", format: "mcq", createdAt: "2026-08-11T07:00:00Z" },
+    { questionId: "q2", correct: true, usedHint: false, confidence: "High", format: "data", createdAt: "2026-08-03T08:00:00Z", transfer: true },
+    { questionId: "q1", correct: true, usedHint: false, confidence: "High", format: "mcq", createdAt: "2026-08-03T07:00:00Z" },
   ];
   assert.equal(reliableMastery(objective, mixed, "2026-08-11"), true);
   assert.equal(reliableMastery(objective, mixed.map((attempt) => ({ ...attempt, format: "mcq" })), "2026-08-11"), false);
   assert.equal(reliableMastery(objective, mixed.map((attempt) => ({ ...attempt, usedHint: true })), "2026-08-11"), false);
+  assert.equal(reliableMastery(objective, mixed.map((attempt) => ({ ...attempt, createdAt: "2026-08-11T08:00:00Z" })), "2026-08-11"), false);
+  assert.equal(reliableMastery(objective, mixed.map((attempt) => ({ ...attempt, transfer: false })), "2026-08-11"), false);
+  assert.equal(reliableMastery(objective, mixed.map((attempt) => ({ ...attempt, questionId: "same-question" })), "2026-08-11"), false);
   assert.equal(objectiveNeedsPractice({ ...objective, mastered: true }, "2026-08-11"), false);
 });
 

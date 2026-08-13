@@ -4,6 +4,7 @@ import { isAdmin } from "@/db/packs";
 import { getStore } from "@/db/runtime";
 import { dateKey, reliableMastery } from "@/lib/adaptive.mjs";
 import { verifiedBiologyAnswerKey } from "@/lib/biology-content";
+import { isTransferQuestion } from "@/lib/quality.mjs";
 
 const classCode = "ASTER9744";
 const acceptedClassCodes = new Set([classCode, "ASTER9477"]);
@@ -41,12 +42,15 @@ export async function GET(request: Request) {
     const recentByCode = new Map<string, typeof studentAttempts>();
     for (const attempt of studentAttempts) {
       const recent = recentByCode.get(attempt.objectiveCode) ?? [];
-      if (recent.length < 6) recent.push(attempt);
+      if (recent.length < 20) recent.push(attempt);
       recentByCode.set(attempt.objectiveCode, recent);
     }
     const mastered = studentMastery.filter((item) => reliableMastery(item, (recentByCode.get(item.code) ?? []).map((attempt) => ({
+      questionId: attempt.questionId,
       correct: Boolean(attempt.correct), confidence: attempt.confidence, usedHint: Boolean(attempt.usedHint),
       format: verifiedBiologyAnswerKey[attempt.questionId]?.format ?? "mcq",
+      createdAt: attempt.createdAt,
+      transfer: isTransferQuestion(verifiedBiologyAnswerKey[attempt.questionId]),
     })), today)).length;
     const weak = studentMastery.filter((item) => item.evidence > 0).sort((a, b) => a.score - b.score).slice(0, 2).map((item) => item.code);
     const correct = studentAttempts.filter((attempt) => attempt.correct).length;
